@@ -370,14 +370,24 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
-      const junkForms = ['purified', 'costume', 'hat', 'crown', 'flower', '2019', '2020', '2021', '2022', '2023', '2024', 'clone', 'libre', 'star', 'holiday', 'event', 'anniversary', 'winter', 'summer', 'fall', 'spring', 'bowtie', 'scarf', 'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 'trick', 'treat', 'spooky', 'fragment', 'explorer'];
+      // Expanded junk form filter to catch newer internal strings for events/locales
+      const junkForms = [
+        'purified', 'costume', 'hat', 'crown', 'flower', 'clone', 'holiday', 
+        'event', 'anniv', 'winter', 'summer', 'fall', 'spring', 'bowtie', 'scarf', 
+        'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 
+        'trick', 'treat', 'spooky', 'fragment', 'explorer', 'gofest', 'gotour', 
+        'wcs_', 'doctor', 'flying_', 'okinawa', 'goggles', 'monocle', 'horizons', 
+        'jeju', 'kariyushi', 'kurta', 'safari', 'beanie', 'bandana', 'ribbon', 
+        'sweatshirt', 'world', 'rock_star', 'pop_star', 'phd', 'lucha', 'cosplay',
+        'belle', 'libre', 'a_0', 'b_0', 'c_0'
+      ];
 
       stats.forEach(p => {
         let name = p.pokemon_name;
         if (p.form && p.form !== 'Normal') {
           let fLow = p.form.toLowerCase();
-          // Skip junk costumes and clones completely
-          if (junkForms.some(w => fLow.includes(w))) return;
+          // Wipe out anything with a 4-digit year (e.g. 2024, 2025) or in the junk list above
+          if (/\d{4}/.test(fLow) || junkForms.some(w => fLow.includes(w))) return;
           name = `${p.pokemon_name} (${p.form})`;
         }
         pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
