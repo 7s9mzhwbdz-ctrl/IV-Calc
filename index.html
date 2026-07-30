@@ -105,6 +105,15 @@
   .related-tag.tag-evo:hover { background: #3730a3; color: white; }
   .related-tag.tag-form { background: #fffbeb; color: #b45309; border-color: #fde68a; }
   .related-tag.tag-form:hover { background: #b45309; color: white; }
+  
+  /* Collapsible Forms */
+  details.forms-collapse { margin-top: 10px; font-size: 12px; }
+  details.forms-collapse summary {
+    cursor: pointer; color: var(--primary-blue); font-weight: 600;
+    user-select: none; outline: none; padding: 4px 0;
+  }
+  details.forms-collapse summary:hover { text-decoration: underline; }
+  .forms-tag-container { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
 
   /* --- OBSERVED CP --- */
   .cp-input-container {
@@ -194,7 +203,7 @@
         <input type="text" id="pokemon" placeholder="e.g. Pawmi, Skeledirge, Lunatone..." autocomplete="off">
         <div id="autocomplete-list" class="autocomplete-items"></div>
       </div>
-      <div id="related-pokemon" class="related-container"></div>
+      <div id="related-pokemon"></div>
     </div>
 
     <div class="card">
@@ -484,17 +493,34 @@
 
   // Display Renderers
   function renderPVE(name, data) {
-    let relatedHtml = "";
+    let familyHtml = "";
+    let formsHtml = "";
+    
     let forms = Object.keys(pokeData).filter(k => pokeData[k].id === data.id && k !== name);
     let evos = evoData[name] || [];
     let preEvos = Object.keys(evoData).filter(k => evoData[k].includes(name));
     
     const makeTag = (label, pName, typeClass) => `<span class="related-tag ${typeClass}" onclick="selectPokemon('${pName.replace(/'/g, "\\'")}')">${label}: ${pName}</span>`;
 
-    if (preEvos.length) preEvos.forEach(p => relatedHtml += makeTag("From", p, ""));
-    if (evos.length) evos.forEach(p => relatedHtml += makeTag("Evolves to", p, "tag-evo"));
-    if (forms.length) forms.forEach(p => relatedHtml += makeTag("Form", p, "tag-form"));
-    ui.related.innerHTML = relatedHtml;
+    if (preEvos.length) preEvos.forEach(p => familyHtml += makeTag("From", p, ""));
+    if (evos.length) evos.forEach(p => familyHtml += makeTag("Evolves to", p, "tag-evo"));
+    
+    if (forms.length) {
+      let formTags = "";
+      forms.forEach(p => formTags += makeTag("Form", p, "tag-form"));
+      formsHtml = `
+        <details class="forms-collapse">
+          <summary>View Alternative Forms (${forms.length})</summary>
+          <div class="forms-tag-container">${formTags}</div>
+        </details>
+      `;
+    }
+    
+    let fullRelatedHtml = "";
+    if (familyHtml) fullRelatedHtml += `<div class="related-container">${familyHtml}</div>`;
+    if (formsHtml) fullRelatedHtml += formsHtml;
+    
+    ui.related.innerHTML = fullRelatedHtml;
 
     let pveEval = "";
     if (data.atk >= 250) pveEval = "<span style='color: #15803d; font-weight: bold;'>Top-Tier Raid Attacker</span>";
@@ -629,7 +655,6 @@
       selectedMatch = currentMatches.find(m => m.id === id);
     }
     
-    // Update visuals without re-rendering list (to keep scroll position intact)
     document.querySelectorAll('.match-row').forEach(row => {
       if (row.dataset.id === (selectedMatch ? selectedMatch.id : '')) {
         row.classList.add('selected-row');
@@ -638,7 +663,6 @@
       }
     });
     
-    // Re-evaluate the PVP rankings for the selected isolate
     renderPVPTable(ui.poke.value, pokeData[ui.poke.value]);
   }
 
@@ -663,7 +687,6 @@
     currentMatches = [];
     let minIV = isWeather ? 4 : 0;
     
-    // Loop through levels up to 2 above and below the slider guess
     for (let l = Math.max(1, baseLevel - 2); l <= Math.min(50, baseLevel + 2); l++) {
       let cpm = CPM[l];
       for (let a = minIV; a <= 15; a++) {
@@ -681,7 +704,6 @@
       }
     }
 
-    // Sort by highest total IVs, then by closest to the actual slider level
     currentMatches.sort((x, y) => {
         if (y.total !== x.total) return y.total - x.total;
         return Math.abs(x.level - baseLevel) - Math.abs(y.level - baseLevel);
