@@ -111,9 +111,7 @@
   .related-tag.tag-form { background: #fffbeb; color: #b45309; border-color: #fde68a; }
   .related-tag.tag-form:hover { background: #b45309; color: white; }
   
-  details.forms-collapse { margin-top: 10px; font-size: 12px; }
-  details.forms-collapse summary { cursor: pointer; color: var(--primary-blue); font-weight: 600; user-select: none; outline: none; padding: 4px 0; }
-  details.forms-collapse summary:hover { text-decoration: underline; }
+  .forms-section-title { margin-top: 15px; font-size: 11px; color: var(--primary-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
   .forms-tag-container { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
 
   /* --- OBSERVED CP --- */
@@ -135,6 +133,7 @@
 
   /* --- CATCH CIRCLE SLIDER --- */
   .slider-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+  .slack-select { padding: 4px 6px; border: 1px solid var(--border-light); border-radius: 4px; color: var(--text-main); font-weight: 600; font-size: 12px; outline: none; background: white; cursor: pointer; }
   .level-badge { border: 2px solid var(--primary-blue); color: var(--primary-blue); padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; background: #f4f6fc; }
   
   .range-container { margin-top: 10px; }
@@ -225,7 +224,16 @@
       <div class="card">
         <div class="slider-header-row">
           <div class="card-header" style="margin:0;">Catch Circle Color</div>
-          <div class="level-badge" id="levelDisplay">Lvl 15 (±2)</div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="levelSlack" class="slack-select">
+              <option value="0">Exact</option>
+              <option value="1">±1 Level</option>
+              <option value="2" selected>±2 Levels</option>
+              <option value="3">±3 Levels</option>
+              <option value="4">±4 Levels</option>
+            </select>
+            <div class="level-badge" id="levelDisplay">Lvl 15</div>
+          </div>
         </div>
         <div class="range-container">
           <input type="range" id="levelSlider" min="1" max="50" value="15">
@@ -340,6 +348,7 @@
     cp: document.getElementById('cp'),
     weather: document.getElementById('weather'),
     slider: document.getElementById('levelSlider'),
+    slack: document.getElementById('levelSlack'),
     levelDisp: document.getElementById('levelDisplay'),
     results: document.getElementById('results'),
     pveResults: document.getElementById('pve-results'),
@@ -435,7 +444,7 @@
 
   function updateSliderVisuals() {
     let level = parseInt(ui.slider.value);
-    ui.levelDisp.innerText = `Lvl ${level} (±2)`;
+    ui.levelDisp.innerText = `Lvl ${level}`;
     let hue = 120 - ((level - 1) / 49) * 120;
     ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
   }
@@ -567,10 +576,8 @@
       let formTags = "";
       forms.forEach(p => formTags += makeTag("Form", p, "tag-form"));
       formsHtml = `
-        <details class="forms-collapse">
-          <summary>▶ View Alternative Forms (${forms.length})</summary>
-          <div class="forms-tag-container">${formTags}</div>
-        </details>
+        <div class="forms-section-title">Alternative Forms (${forms.length})</div>
+        <div class="forms-tag-container">${formTags}</div>
       `;
     }
     
@@ -616,12 +623,14 @@
     if (isCaughtMode) return; // Handled dynamically, list is hidden in caught mode
 
     if (currentMatches.length === 0) {
-      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} near Level ${ui.slider.value}.</strong><br>Try sliding the color up or down slightly.</div>`;
+      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} near Level ${ui.slider.value}.</strong><br>Try sliding the color up or down slightly or adjusting the margin of error.</div>`;
       return;
     }
+    
+    let slackDisplay = ui.slack.value === "0" ? "EXACT LVL" : `±${ui.slack.value} LVLS`;
 
     let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
-        <span>${currentMatches.length} POSSIBILITIES (±2 LVLS)</span>
+        <span>${currentMatches.length} POSSIBILITIES (${slackDisplay})</span>
         <span style="font-style:italic; font-weight:normal;">Click a row to isolate</span>
     </div>`;
     
@@ -755,6 +764,7 @@
     // WILD ENCOUNTER LOGIC
     let cpInput = parseInt(ui.cp.value);
     let baseLevel = parseInt(ui.slider.value);
+    let slack = parseInt(ui.slack.value);
     let isWeather = ui.weather.checked;
 
     if (!cpInput) {
@@ -766,7 +776,7 @@
     let minIV = isWeather ? 4 : 0;
     
     // Wild levels are strictly whole numbers 1-50
-    for (let l = Math.max(1, baseLevel - 2); l <= Math.min(50, baseLevel + 2); l++) {
+    for (let l = Math.max(1, baseLevel - slack); l <= Math.min(50, baseLevel + slack); l++) {
       let cpm = getCPM(l);
       for (let a = minIV; a <= 15; a++) {
         for (let d = minIV; d <= 15; d++) {
@@ -794,7 +804,7 @@
   }
 
   // Bind Events for both Modes
-  [ui.cp, ui.weather, ui.cLevel, ui.cAtk, ui.cDef, ui.cSta].forEach(el => el.addEventListener('input', calculateMatches));
+  [ui.cp, ui.weather, ui.slack, ui.cLevel, ui.cAtk, ui.cDef, ui.cSta].forEach(el => el.addEventListener('input', calculateMatches));
   
   loadData();
 </script>
