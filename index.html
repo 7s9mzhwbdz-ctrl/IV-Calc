@@ -1,0 +1,217 @@
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Wild Encounter IV & Color Matcher</title>
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 20px; max-width: 500px; margin: auto; background: #f0f2f5; }
+  .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #333; }
+  input[type="text"], input[type="number"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+  
+  .autocomplete-container { position: relative; width: 100%; }
+  .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background-color: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+  .autocomplete-items div { padding: 12px; cursor: pointer; border-bottom: 1px solid #d4d4d4; font-size: 16px; }
+  .autocomplete-items div:active { background-color: #e9e9e9; }
+
+  input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin-top: 15px; }
+  input[type=range]:focus { outline: none; }
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #ddd; border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%;
+    background: var(--thumb-color, #00ff00); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    cursor: pointer; margin-top: -11px;
+  }
+  
+  .checkbox-group { display: flex; align-items: center; margin-top: 15px; font-weight: bold; font-size: 14px; }
+  .checkbox-group input { margin-right: 10px; width: 20px; height: 20px; }
+  
+  .results { margin-top: 20px; padding: 15px; background: #e8f0fe; border-radius: 8px; font-size: 14px; max-height: 250px; overflow-y: auto; }
+  .match { border-bottom: 1px solid #ccc; padding: 8px 0; }
+  .match:last-child { border-bottom: none; }
+  .error { color: #d32f2f; background: #ffebee; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Wild IV Calculator</h2>
+  
+  <label>Pokémon Species (Live Database)</label>
+  <div class="autocomplete-container">
+    <input type="text" id="pokemon" placeholder="e.g. Tyrunt, Pawmi..." autocomplete="off">
+    <div id="autocomplete-list" class="autocomplete-items"></div>
+  </div>
+
+  <label>Wild CP</label>
+  <input type="number" id="cp" placeholder="Enter CP shown on screen">
+
+  <div class="checkbox-group">
+    <input type="checkbox" id="weather"> Weather Boosted? (Minimum 4/4/4 IVs)
+  </div>
+
+  <label>Match Catch Circle Color (Level 1-50)</label>
+  <p style="font-size:12px; color:#666; margin-top:0;">Slide to match the exact ring color on your screen.</p>
+  <input type="range" id="levelSlider" min="1" max="50" value="15">
+  <div style="text-align:center; font-weight:bold; margin-top:10px;" id="levelDisplay">Est. Level: 15</div>
+</div>
+
+<div class="card results" id="results">
+  <em>Loading live Pokémon database... this may take a few seconds on mobile.</em>
+</div>
+
+<script>
+  const CPM = [
+    0, 0.094, 0.16639787, 0.21573247, 0.25572005, 0.29024988, 0.3210876, 0.34921268, 0.37523559, 0.39956728, 
+    0.42250001, 0.44310755, 0.46279839, 0.48168495, 0.49985844, 0.51739395, 0.53435433, 0.55079269, 0.56675452, 0.58227891, 
+    0.59740001, 0.61215729, 0.62656713, 0.64065295, 0.65443563, 0.667934, 0.68116492, 0.69414365, 0.70688421, 0.71939909, 
+    0.7317, 0.73776948, 0.74378943, 0.74976104, 0.75568551, 0.76156384, 0.76739717, 0.7731865, 0.77893275, 0.78463697, 
+    0.79030001, 0.79530001, 0.8003, 0.8053, 0.8103, 0.81529999, 0.82029999, 0.82529999, 0.83029999, 0.83529999, 
+    0.84029999
+  ];
+
+  let pokeData = {};
+  let pokemonNames = [];
+  const ui = {
+    poke: document.getElementById('pokemon'),
+    list: document.getElementById('autocomplete-list'),
+    cp: document.getElementById('cp'),
+    weather: document.getElementById('weather'),
+    slider: document.getElementById('levelSlider'),
+    levelDisp: document.getElementById('levelDisplay'),
+    results: document.getElementById('results')
+  };
+
+  async function loadData() {
+    // 10-second timeout to prevent infinite hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      // Use a CORS proxy to bypass Safari's strict local file restrictions
+      const proxy = 'https://api.allorigins.win/raw?url=';
+      const statsUrl = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_stats.json');
+      const encountersUrl = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_encounter_data.json');
+
+      const [statsRes, encounterRes] = await Promise.all([
+        fetch(statsUrl, { signal: controller.signal }),
+        fetch(encountersUrl, { signal: controller.signal })
+      ]);
+      
+      clearTimeout(timeoutId);
+      
+      if (!statsRes.ok || !encounterRes.ok) throw new Error("API returned an error");
+
+      const stats = await statsRes.json();
+      const encounters = await encounterRes.json();
+
+      stats.forEach(p => {
+        let name = p.pokemon_name || p.name;
+        pokeData[name] = { atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
+      });
+      encounters.forEach(p => {
+        let name = p.pokemon_name || p.name;
+        if (pokeData[name] && (!p.form || p.form === 'Normal')) {
+          pokeData[name].bcr = parseFloat(p.base_capture_rate);
+        }
+      });
+
+      pokemonNames = Object.keys(pokeData).filter(n => pokeData[n].bcr).sort();
+      ui.results.classList.remove('error');
+      ui.results.innerHTML = "<em>Database loaded! Enter Pokémon, CP, and match color.</em>";
+    } catch(e) {
+      clearTimeout(timeoutId);
+      ui.results.classList.add('error');
+      ui.results.innerHTML = `<strong>Failed to load data.</strong><br><br>Apple's local file security is still blocking the connection. <br><br><b>Workaround:</b> Instead of opening this file in Safari, open your Safari browser, go to <b>CodePen.io/pen</b>, and paste this entire code into the "HTML" box. It will run perfectly from there!`;
+    }
+  }
+
+  ui.poke.addEventListener('input', function() {
+    let val = this.value;
+    ui.list.innerHTML = ''; 
+    if (!val) return;
+    
+    let matches = pokemonNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
+    
+    matches.forEach(name => {
+      let item = document.createElement("div");
+      let regex = new RegExp(`(${val})`, "gi");
+      item.innerHTML = name.replace(regex, "<strong>$1</strong>");
+      
+      item.addEventListener("click", function() {
+        ui.poke.value = name;
+        ui.list.innerHTML = '';
+        update();
+      });
+      ui.list.appendChild(item);
+    });
+    update();
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target !== ui.poke) {
+      ui.list.innerHTML = '';
+    }
+  });
+
+  function calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
+    let atk = parseInt(baseAtk) + ivA;
+    let def = parseInt(baseDef) + ivD;
+    let sta = parseInt(baseSta) + ivS;
+    let cp = (atk * Math.sqrt(def) * Math.sqrt(sta) * Math.pow(cpm, 2)) / 10;
+    return Math.max(10, Math.floor(cp));
+  }
+
+  function update() {
+    let name = ui.poke.value;
+    let cpInput = parseInt(ui.cp.value);
+    let level = parseInt(ui.slider.value);
+    let isWeather = ui.weather.checked;
+    let data = pokeData[name];
+
+    ui.levelDisp.innerText = `Est. Level: ${level}`;
+
+    if (!data) return; 
+
+    let cpm = CPM[level];
+    let prob = 1 - Math.pow(1 - (data.bcr / (2 * cpm)), 1);
+    let hue = Math.max(0, Math.min(120, prob * 120));
+    ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
+
+    if (!cpInput) {
+       ui.results.innerHTML = "<em>Enter CP to calculate IVs.</em>";
+       return;
+    }
+
+    let matches = [];
+    let minIV = isWeather ? 4 : 0;
+    
+    for (let a = minIV; a <= 15; a++) {
+      for (let d = minIV; d <= 15; d++) {
+        for (let s = minIV; s <= 15; s++) {
+          if (calculateCP(data.atk, data.def, data.sta, a, d, s, cpm) === cpInput) {
+            matches.push({a, d, s, total: ((a + d + s) / 45 * 100).toFixed(1)});
+          }
+        }
+      }
+    }
+
+    if (matches.length === 0) {
+      ui.results.innerHTML = `<strong>No combinations match CP ${cpInput} at Level ${level}.</strong><br>Try sliding the color up or down slightly.`;
+    } else {
+      matches.sort((x, y) => y.total - x.total);
+      ui.results.innerHTML = `<strong>${matches.length} possible combinations:</strong><br><br>` + 
+        matches.map(m => `<div class="match">ATK: <b>${m.a}</b> | DEF: <b>${m.d}</b> | STA: <b>${m.s}</b> &nbsp;&nbsp;(${m.total}%)</div>`).join('');
+    }
+  }
+
+  [ui.cp, ui.weather, ui.slider].forEach(el => el.addEventListener('input', update));
+  
+  loadData();
+</script>
+</body>
+</html>
