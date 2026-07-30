@@ -83,34 +83,41 @@
     results: document.getElementById('results')
   };
 
-  async function loadData() {
-    // 10-second timeout to prevent infinite hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+  // NEW JSONP LOAD DATA FUNCTION (Bypasses Safari Local File Security)
+  function loadData() {
+    let statsLoaded = false;
+    let encountersLoaded = false;
+    let statsData = null;
+    let encountersData = null;
 
-    try {
-      // Use a CORS proxy to bypass Safari's strict local file restrictions
-      const proxy = 'https://api.allorigins.win/raw?url=';
-      const statsUrl = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_stats.json');
-      const encountersUrl = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_encounter_data.json');
+    // Define Global Callbacks for JSONP
+    window.parsePokemonStats = function(response) {
+      try {
+        statsData = JSON.parse(response.contents);
+        statsLoaded = true;
+        processAPI();
+      } catch (e) { triggerError(); }
+    };
 
-      const [statsRes, encounterRes] = await Promise.all([
-        fetch(statsUrl, { signal: controller.signal }),
-        fetch(encountersUrl, { signal: controller.signal })
-      ]);
-      
-      clearTimeout(timeoutId);
-      
-      if (!statsRes.ok || !encounterRes.ok) throw new Error("API returned an error");
+    window.parsePokemonEncounters = function(response) {
+      try {
+        encountersData = JSON.parse(response.contents);
+        encountersLoaded = true;
+        processAPI();
+      } catch (e) { triggerError(); }
+    };
 
-      const stats = await statsRes.json();
-      const encounters = await encounterRes.json();
+    function processAPI() {
+      if (!statsLoaded || !encountersLoaded) return; // Wait for both
 
-      stats.forEach(p => {
+      // Process Stats
+      statsData.forEach(p => {
         let name = p.pokemon_name || p.name;
         pokeData[name] = { atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
       });
-      encounters.forEach(p => {
+      
+      // Process Encounters
+      encountersData.forEach(p => {
         let name = p.pokemon_name || p.name;
         if (pokeData[name] && (!p.form || p.form === 'Normal')) {
           pokeData[name].bcr = parseFloat(p.base_capture_rate);
@@ -120,11 +127,30 @@
       pokemonNames = Object.keys(pokeData).filter(n => pokeData[n].bcr).sort();
       ui.results.classList.remove('error');
       ui.results.innerHTML = "<em>Database loaded! Enter Pokémon, CP, and match color.</em>";
-    } catch(e) {
-      clearTimeout(timeoutId);
-      ui.results.classList.add('error');
-      ui.results.innerHTML = `<strong>Failed to load data.</strong><br><br>Apple's local file security is still blocking the connection. <br><br><b>Workaround:</b> Instead of opening this file in Safari, open your Safari browser, go to <b>CodePen.io/pen</b>, and paste this entire code into the "HTML" box. It will run perfectly from there!`;
     }
+
+    function triggerError() {
+      ui.results.classList.add('error');
+      ui.results.innerHTML = `<strong>Failed to load data.</strong><br>Check your internet connection.`;
+    }
+
+    // JSONP script injection
+    const proxy = 'https://api.allorigins.win/get?url=';
+    
+    const statsScript = document.createElement('script');
+    statsScript.src = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_stats.json') + '&callback=parsePokemonStats';
+    statsScript.onerror = triggerError;
+    document.body.appendChild(statsScript);
+
+    const encountersScript = document.createElement('script');
+    encountersScript.src = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_encounter_data.json') + '&callback=parsePokemonEncounters';
+    encountersScript.onerror = triggerError;
+    document.body.appendChild(encountersScript);
+
+    // 10 Second timeout fallback
+    setTimeout(() => {
+      if (!statsLoaded || !encountersLoaded) triggerError();
+    }, 10000);
   }
 
   ui.poke.addEventListener('input', function() {
@@ -207,7 +233,7 @@
   }
 
   [ui.cp, ui.weather, ui.slider].forEach(el => el.addEventListener('input', update));
-  
+
   loadData();
 </script>
 </body>
