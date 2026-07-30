@@ -161,6 +161,11 @@
     border-radius: 8px;
     background: #ffffff;
   }
+  
+  /* Selectable Rows Styling */
+  .match-row { cursor: pointer; transition: background 0.15s; }
+  .match-row:hover { background-color: #f9fafb; }
+  .selected-row { background-color: #e0e7ff !important; box-shadow: inset 4px 0 0 #3730a3; }
 </style>
 </head>
 <body>
@@ -189,7 +194,6 @@
         <input type="text" id="pokemon" placeholder="e.g. Pawmi, Skeledirge, Lunatone..." autocomplete="off">
         <div id="autocomplete-list" class="autocomplete-items"></div>
       </div>
-      <!-- Internal related links render here -->
       <div id="related-pokemon" class="related-container"></div>
     </div>
 
@@ -216,7 +220,7 @@
     <div class="card">
       <div class="slider-header-row">
         <div class="card-header" style="margin:0;">Catch Circle Color</div>
-        <div class="level-badge" id="levelDisplay">Lvl 15</div>
+        <div class="level-badge" id="levelDisplay">Lvl 15 (±2)</div>
       </div>
       <div class="range-container">
         <input type="range" id="levelSlider" min="1" max="50" value="15">
@@ -284,6 +288,10 @@
   let evoData = {}; 
   let cachedRanks = {}; 
   
+  // State variables for matches and selection
+  let currentMatches = [];
+  let selectedMatch = null;
+  
   const ui = {
     poke: document.getElementById('pokemon'),
     list: document.getElementById('autocomplete-list'),
@@ -331,11 +339,11 @@
     }
   }
 
-  // Global function so onclick tags can access it
+  // Handle Autocomplete
   window.selectPokemon = function(name) {
     ui.poke.value = name;
     ui.list.innerHTML = '';
-    update();
+    calculateMatches();
   };
 
   ui.poke.addEventListener('input', function() {
@@ -352,7 +360,7 @@
       item.addEventListener("click", () => selectPokemon(name));
       ui.list.appendChild(item);
     });
-    update();
+    calculateMatches();
   });
 
   document.addEventListener("click", function (e) {
@@ -361,7 +369,7 @@
 
   function updateSliderVisuals() {
     let level = parseInt(ui.slider.value);
-    ui.levelDisp.innerText = `Lvl ${level}`;
+    ui.levelDisp.innerText = `Lvl ${level} (±2)`;
     let hue = 120 - ((level - 1) / 49) * 120;
     ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
   }
@@ -369,9 +377,10 @@
   updateSliderVisuals();
   ui.slider.addEventListener('input', function() {
     updateSliderVisuals();
-    update();
+    calculateMatches();
   });
 
+  // Math Functions
   function calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
     let atk = parseInt(baseAtk) + ivA;
     let def = parseInt(baseDef) + ivD;
@@ -427,7 +436,6 @@
     return { sp: maxSp, level: bestLevel };
   }
 
-  // Recursive search to find the final stage(s) of evolution for projecting rankings
   function getFinalEvolutions(name) {
     let finals = [];
     let visited = new Set();
@@ -445,6 +453,7 @@
     return [...new Set(finals)].filter(f => pokeData[f]);
   }
 
+  // Row Generating Helpers
   function makeRowRank1(leagueName, rank1) {
     return `<tr>
       <td><strong>${leagueName}</strong></td>
@@ -473,16 +482,8 @@
     </tr>`;
   }
 
-  function update() {
-    let name = ui.poke.value;
-    let cpInput = parseInt(ui.cp.value);
-    let level = parseInt(ui.slider.value);
-    let isWeather = ui.weather.checked;
-    let data = pokeData[name];
-
-    if (!data) return; 
-
-    // --- POPULATE INTERNAL RELATED LINKS (Forms & Family) ---
+  // Display Renderers
+  function renderPVE(name, data) {
     let relatedHtml = "";
     let forms = Object.keys(pokeData).filter(k => pokeData[k].id === data.id && k !== name);
     let evos = evoData[name] || [];
@@ -495,7 +496,6 @@
     if (forms.length) forms.forEach(p => relatedHtml += makeTag("Form", p, "tag-form"));
     ui.related.innerHTML = relatedHtml;
 
-    // --- PVE EVALUATION ---
     let pveEval = "";
     if (data.atk >= 250) pveEval = "<span style='color: #15803d; font-weight: bold;'>Top-Tier Raid Attacker</span>";
     else if (data.atk >= 200) pveEval = "<span style='color: #0369a1; font-weight: bold;'>Strong Raid Attacker</span>";
@@ -517,115 +517,182 @@
         </a>
       </div>
     `;
+  }
+
+  function renderEmptyPVP(name, data) {
+    let ranks = getSpeciesRanks(name, data);
+    let lcRow = ranks.LC.sp > 0 ? makeRowRank1("Little Cup", ranks.LC) : "";
+    let glRow = ranks.GL.sp > 0 ? makeRowRank1("Great League", ranks.GL) : "";
+    let ulRow = ranks.UL.sp > 0 ? makeRowRank1("Ultra League", ranks.UL) : "";
+    let mlRow = makeRowRank1("Master League", ranks.ML);
+    ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
+  }
+
+  function renderIVList() {
+    if (currentMatches.length === 0) {
+      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} near Level ${ui.slider.value}.</strong><br>Try sliding the color up or down slightly.</div>`;
+      return;
+    }
+
+    let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
+        <span>${currentMatches.length} POSSIBILITIES (±2 LVLS)</span>
+        <span style="font-style:italic; font-weight:normal;">Click a row to isolate</span>
+    </div>`;
+    
+    htmlOut += `<div class="scrollable-matches"><table class="results-table" style="margin: 0;">`;
+    htmlOut += `<thead><tr><th style="padding-left:10px;">Lvl</th><th>IVs (A/D/S)</th><th style="padding-right:10px;">% Perfect</th></tr></thead><tbody>`;
+    
+    currentMatches.forEach(m => {
+      let isPerfect = m.total === "100.0" ? "perfect-iv" : "";
+      let isSelected = (selectedMatch && selectedMatch.id === m.id) ? "selected-row" : "";
+      htmlOut += `
+        <tr class="match-row ${isSelected} ${isPerfect}" data-id="${m.id}" onclick="selectMatch('${m.id}')">
+          <td style="padding-left: 10px;"><strong>${m.level}</strong></td>
+          <td>${m.a} / ${m.d} / ${m.s}</td>
+          <td style="padding-right: 10px;"><strong>${m.total}%</strong></td>
+        </tr>
+      `;
+    });
+    htmlOut += `</tbody></table></div>`;
+    ui.results.innerHTML = htmlOut;
+  }
+
+  function renderPVPTable(name, data) {
+    if (currentMatches.length === 0) {
+      ui.pvpBody.innerHTML = `<tr><td colspan="5" class="placeholder-text" style="padding: 20px;">No valid combinations found.</td></tr>`;
+      return;
+    }
 
     let ranks = getSpeciesRanks(name, data);
+    let matchesToUse = selectedMatch ? [selectedMatch] : currentMatches;
+    let bestLC = { sp: 0 }, bestGL = { sp: 0 }, bestUL = { sp: 0 }, bestML = { sp: 0 };
+    
+    matchesToUse.forEach(m => {
+       let lc = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 500, m.level);
+       if (lc.sp > bestLC.sp) bestLC = { iv: m, ...lc };
+       
+       let gl = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 1500, m.level);
+       if (gl.sp > bestGL.sp) bestGL = { iv: m, ...gl };
+       
+       let ul = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 2500, m.level);
+       if (ul.sp > bestUL.sp) bestUL = { iv: m, ...ul };
+       
+       let ml = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 10000, m.level);
+       if (ml.sp > bestML.sp) bestML = { iv: m, ...ml };
+    });
+
+    let lcRow = ranks.LC.sp > 0 ? makeRowObserved("Little Cup", bestLC, ranks.LC) : "";
+    let glRow = ranks.GL.sp > 0 ? makeRowObserved("Great League", bestGL, ranks.GL) : "";
+    let ulRow = ranks.UL.sp > 0 ? makeRowObserved("Ultra League", bestUL, ranks.UL) : "";
+    let mlRow = makeRowObserved("Master League", bestML, ranks.ML);
+    
+    let finalHtml = lcRow + glRow + ulRow + mlRow;
+
+    // --- SIMULATED EVOLUTION PROJECTION ---
+    let finals = getFinalEvolutions(name).slice(0, 2); 
+    finals.forEach(fName => {
+      let fData = pokeData[fName];
+      if(!fData) return;
+      
+      let fRanks = getSpeciesRanks(fName, fData);
+      let bestF_GL = { sp: 0 }, bestF_UL = { sp: 0 }, bestF_ML = { sp: 0 };
+      
+      matchesToUse.forEach(m => {
+        let gl = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 1500, m.level);
+        if (gl.sp > bestF_GL.sp) bestF_GL = { iv: m, ...gl };
+        
+        let ul = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 2500, m.level);
+        if (ul.sp > bestF_UL.sp) bestF_UL = { iv: m, ...ul };
+        
+        let ml = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 10000, m.level);
+        if (ml.sp > bestF_ML.sp) bestF_ML = { iv: m, ...ml };
+      });
+
+      let e_glRow = fRanks.GL.sp > 0 ? makeRowObserved("Great League", bestF_GL, fRanks.GL) : "";
+      let e_ulRow = fRanks.UL.sp > 0 ? makeRowObserved("Ultra League", bestF_UL, fRanks.UL) : "";
+      let e_mlRow = makeRowObserved("Master League", bestF_ML, fRanks.ML);
+      
+      if (e_glRow || e_ulRow || e_mlRow) {
+        finalHtml += `<tr><td colspan="5" class="evo-header">If Evolved to ${fName}</td></tr>`;
+        finalHtml += e_glRow + e_ulRow + e_mlRow;
+      }
+    });
+
+    ui.pvpBody.innerHTML = finalHtml;
+  }
+
+  // Event Handlers for UI Selection
+  window.selectMatch = function(id) {
+    if (selectedMatch && selectedMatch.id === id) {
+      selectedMatch = null; 
+    } else {
+      selectedMatch = currentMatches.find(m => m.id === id);
+    }
+    
+    // Update visuals without re-rendering list (to keep scroll position intact)
+    document.querySelectorAll('.match-row').forEach(row => {
+      if (row.dataset.id === (selectedMatch ? selectedMatch.id : '')) {
+        row.classList.add('selected-row');
+      } else {
+        row.classList.remove('selected-row');
+      }
+    });
+    
+    // Re-evaluate the PVP rankings for the selected isolate
+    renderPVPTable(ui.poke.value, pokeData[ui.poke.value]);
+  }
+
+  function calculateMatches() {
+    let name = ui.poke.value;
+    let cpInput = parseInt(ui.cp.value);
+    let baseLevel = parseInt(ui.slider.value);
+    let isWeather = ui.weather.checked;
+    let data = pokeData[name];
+
+    if (!data) return; 
+
+    renderPVE(name, data);
 
     if (!cpInput) {
        ui.results.innerHTML = "<div class='placeholder-text'>Enter CP to evaluate possibilities...</div>";
-       let lcRow = ranks.LC.sp > 0 ? makeRowRank1("Little Cup", ranks.LC) : "";
-       let glRow = ranks.GL.sp > 0 ? makeRowRank1("Great League", ranks.GL) : "";
-       let ulRow = ranks.UL.sp > 0 ? makeRowRank1("Ultra League", ranks.UL) : "";
-       let mlRow = makeRowRank1("Master League", ranks.ML);
-       ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
+       renderEmptyPVP(name, data);
        return;
     }
 
-    // --- POPULATE OBSERVED CP POSSIBILITIES ---
-    let matches = [];
+    // --- POPULATE OBSERVED CP POSSIBILITIES (±2 Levels) ---
+    currentMatches = [];
     let minIV = isWeather ? 4 : 0;
-    let cpm = CPM[level];
     
-    for (let a = minIV; a <= 15; a++) {
-      for (let d = minIV; d <= 15; d++) {
-        for (let s = minIV; s <= 15; s++) {
-          if (calculateCP(data.atk, data.def, data.sta, a, d, s, cpm) === cpInput) {
-            matches.push({a, d, s, total: ((a + d + s) / 45 * 100).toFixed(1)});
+    // Loop through levels up to 2 above and below the slider guess
+    for (let l = Math.max(1, baseLevel - 2); l <= Math.min(50, baseLevel + 2); l++) {
+      let cpm = CPM[l];
+      for (let a = minIV; a <= 15; a++) {
+        for (let d = minIV; d <= 15; d++) {
+          for (let s = minIV; s <= 15; s++) {
+            if (calculateCP(data.atk, data.def, data.sta, a, d, s, cpm) === cpInput) {
+              currentMatches.push({
+                  a, d, s, level: l, 
+                  total: ((a + d + s) / 45 * 100).toFixed(1),
+                  id: `${l}-${a}-${d}-${s}`
+              });
+            }
           }
         }
       }
     }
 
-    if (matches.length === 0) {
-      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${cpInput} at Level ${level}.</strong><br>Try sliding the color up or down slightly.</div>`;
-      ui.pvpBody.innerHTML = `<tr><td colspan="5" class="placeholder-text" style="padding: 20px;">No valid combinations found.</td></tr>`;
-    } else {
-      matches.sort((x, y) => y.total - x.total);
-      
-      let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted);">${matches.length} POSSIBILITIES FOUND</div>`;
-      htmlOut += `<div class="scrollable-matches"><table class="results-table" style="margin: 0;">`;
-      matches.forEach(m => {
-        let isPerfect = m.total === "100.0" ? "perfect-iv" : "";
-        htmlOut += `
-          <tr class="${isPerfect}">
-            <td style="padding-left: 10px;">ATK: <strong>${m.a}</strong></td>
-            <td>DEF: <strong>${m.d}</strong></td>
-            <td>STA: <strong>${m.s}</strong></td>
-            <td style="padding-right: 10px;"><strong>${m.total}%</strong></td>
-          </tr>
-        `;
-      });
-      htmlOut += `</table></div>`;
-      ui.results.innerHTML = htmlOut;
-
-      let bestLC = { sp: 0 }, bestGL = { sp: 0 }, bestUL = { sp: 0 }, bestML = { sp: 0 };
-      
-      matches.forEach(m => {
-         let lc = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 500, level);
-         if (lc.sp > bestLC.sp) bestLC = { iv: m, ...lc };
-         
-         let gl = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 1500, level);
-         if (gl.sp > bestGL.sp) bestGL = { iv: m, ...gl };
-         
-         let ul = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 2500, level);
-         if (ul.sp > bestUL.sp) bestUL = { iv: m, ...ul };
-         
-         let ml = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 10000, level);
-         if (ml.sp > bestML.sp) bestML = { iv: m, ...ml };
-      });
-
-      let lcRow = ranks.LC.sp > 0 ? makeRowObserved("Little Cup", bestLC, ranks.LC) : "";
-      let glRow = ranks.GL.sp > 0 ? makeRowObserved("Great League", bestGL, ranks.GL) : "";
-      let ulRow = ranks.UL.sp > 0 ? makeRowObserved("Ultra League", bestUL, ranks.UL) : "";
-      let mlRow = makeRowObserved("Master League", bestML, ranks.ML);
-      
-      ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
-
-      // --- SIMULATED EVOLUTION PROJECTION ---
-      // Max limit of 2 branches to prevent Eevee from making the table unreadable
-      let finals = getFinalEvolutions(name).slice(0, 2); 
-      finals.forEach(fName => {
-        let fData = pokeData[fName];
-        if(!fData) return;
-        
-        let fRanks = getSpeciesRanks(fName, fData);
-        let bestF_GL = { sp: 0 }, bestF_UL = { sp: 0 }, bestF_ML = { sp: 0 };
-        
-        // Take the matched IVs and project them onto the Final Evolution's base stats
-        matches.forEach(m => {
-          let gl = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 1500, level);
-          if (gl.sp > bestF_GL.sp) bestF_GL = { iv: m, ...gl };
-          
-          let ul = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 2500, level);
-          if (ul.sp > bestF_UL.sp) bestF_UL = { iv: m, ...ul };
-          
-          let ml = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 10000, level);
-          if (ml.sp > bestF_ML.sp) bestF_ML = { iv: m, ...ml };
-        });
-
-        // Add to table
-        let e_glRow = fRanks.GL.sp > 0 ? makeRowObserved("Great League", bestF_GL, fRanks.GL) : "";
-        let e_ulRow = fRanks.UL.sp > 0 ? makeRowObserved("Ultra League", bestF_UL, fRanks.UL) : "";
-        let e_mlRow = makeRowObserved("Master League", bestF_ML, fRanks.ML);
-        
-        if (e_glRow || e_ulRow || e_mlRow) {
-          ui.pvpBody.innerHTML += `<tr><td colspan="5" class="evo-header">If Evolved to ${fName}</td></tr>`;
-          ui.pvpBody.innerHTML += e_glRow + e_ulRow + e_mlRow;
-        }
-      });
-    }
+    // Sort by highest total IVs, then by closest to the actual slider level
+    currentMatches.sort((x, y) => {
+        if (y.total !== x.total) return y.total - x.total;
+        return Math.abs(x.level - baseLevel) - Math.abs(y.level - baseLevel);
+    });
+    
+    selectedMatch = null;
+    renderIVList();
+    renderPVPTable(name, data);
   }
 
-  [ui.cp, ui.weather].forEach(el => el.addEventListener('input', update));
+  [ui.cp, ui.weather].forEach(el => el.addEventListener('input', calculateMatches));
   
   loadData();
 </script>
