@@ -125,9 +125,7 @@
   .range-container { margin-top: 10px; }
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
   input[type=range]:focus { outline: none; }
-  /* Fixed gradient track */
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, #4caf50, #ffeb3b, #f44336); border-radius: 4px; }
-  /* Dynamic thumb color */
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
     background: var(--thumb-color, #ffeb3b); border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -239,8 +237,8 @@
         <thead>
           <tr>
             <th>Format</th>
-            <th>Rank</th>
-            <th>IVs (A/D/S)</th>
+            <th>% of Max</th>
+            <th>Best IVs</th>
             <th>Level</th>
             <th>Stat Product</th>
           </tr>
@@ -255,7 +253,6 @@
 </div>
 
 <script>
-  // Original CPM data and logic retained
   const CPM = [
     0, 0.094, 0.16639787, 0.21573247, 0.25572005, 0.29024988, 0.3210876, 0.34921268, 0.37523559, 0.39956728, 
     0.42250001, 0.44310755, 0.46279839, 0.48168495, 0.49985844, 0.51739395, 0.53435433, 0.55079269, 0.56675452, 0.58227891, 
@@ -267,6 +264,7 @@
 
   let pokeData = {};
   let pokemonNames = [];
+  let cachedRanks = {}; // Speed Optimization: Cache rank 1 species data so slider doesn't lag
   
   const ui = {
     poke: document.getElementById('pokemon'),
@@ -334,18 +332,14 @@
     }
   });
 
-  // Mathematically tie the thumb color strictly to its position on the 1-50 slider
   function updateSliderVisuals() {
     let level = parseInt(ui.slider.value);
     ui.levelDisp.innerText = `Lvl ${level}`;
-    // Map Level 1 (Green: 120 HSL) to Level 50 (Red: 0 HSL) to match underlying gradient track
     let hue = 120 - ((level - 1) / 49) * 120;
     ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
   }
   
-  // Set slider color on initial page load
   updateSliderVisuals();
-
   ui.slider.addEventListener('input', function() {
     updateSliderVisuals();
     update();
@@ -366,27 +360,78 @@
     return Math.round(atk * def * sta);
   }
 
-  function findBestPvP(data, cap) {
-    let best = { a: 0, d: 0, s: 0, level: 0, sp: 0 };
+  // Find the absolute highest possible Stat Product across ALL IV combinations for a species
+  function getSpeciesRanks(name, data) {
+    if (cachedRanks[name]) return cachedRanks[name];
+    
+    let best = { LC: {sp: 0}, GL: {sp: 0}, UL: {sp: 0} };
+
     for (let a = 0; a <= 15; a++) {
       for (let d = 0; d <= 15; d++) {
         for (let s = 0; s <= 15; s++) {
           for (let lvl = 1; lvl <= 50; lvl++) {
             let cpm = CPM[lvl];
             let cp = calculateCP(data.atk, data.def, data.sta, a, d, s, cpm);
-            if (cp <= cap) {
-              let sp = getStatProduct(data.atk, data.def, data.sta, a, d, s, cpm);
-              if (sp > best.sp) {
-                best = { a, d, s, level: lvl, sp: sp };
-              }
-            } else {
-              break; // Stop checking higher levels if CP cap is exceeded
-            }
+            let sp = getStatProduct(data.atk, data.def, data.sta, a, d, s, cpm);
+            
+            if (cp <= 500 && sp > best.LC.sp) best.LC = { a, d, s, level: lvl, sp };
+            if (cp <= 1500 && sp > best.GL.sp) best.GL = { a, d, s, level: lvl, sp };
+            if (cp <= 2500 && sp > best.UL.sp) best.UL = { a, d, s, level: lvl, sp };
+            if (cp > 2500) break; 
           }
         }
       }
     }
+    
+    let mlSp = getStatProduct(data.atk, data.def, data.sta, 15, 15, 15, CPM[50]);
+    best.ML = { a: 15, d: 15, s: 15, level: 50, sp: mlSp };
+    
+    cachedRanks[name] = best;
     return best;
+  }
+
+  // For a known specific IV combination, find its maximum potential under a cap
+  function getBestForIV(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cap, minLevel) {
+    let bestLevel = 0, maxSp = 0;
+    for (let lvl = minLevel; lvl <= 50; lvl++) {
+      let cpm = CPM[lvl];
+      let cp = calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm);
+      if (cp <= cap) {
+        let sp = getStatProduct(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm);
+        if (sp > maxSp) { maxSp = sp; bestLevel = lvl; }
+      } else {
+        break; // CP strictly increases, so we can stop checking higher levels
+      }
+    }
+    return { sp: maxSp, level: bestLevel };
+  }
+
+  function makeRowRank1(leagueName, rank1) {
+    return `<tr>
+      <td><strong>${leagueName}</strong></td>
+      <td class="perfect-iv"><strong>100.00%</strong></td>
+      <td>${rank1.a} / ${rank1.d} / ${rank1.s}</td>
+      <td>${rank1.level}</td>
+      <td>${rank1.sp.toLocaleString()}</td>
+    </tr>`;
+  }
+
+  function makeRowObserved(leagueName, bestObserved, rank1) {
+    if (bestObserved.sp === 0) {
+      return `<tr>
+        <td><strong>${leagueName}</strong></td>
+        <td colspan="4" style="color: var(--text-muted); font-size: 12px; font-style: italic;">N/A (Current CP exceeds cap)</td>
+      </tr>`;
+    }
+    let pct = ((bestObserved.sp / rank1.sp) * 100).toFixed(2);
+    let isPerfect = pct === "100.00" ? "perfect-iv" : "";
+    return `<tr>
+      <td><strong>${leagueName}</strong></td>
+      <td class="${isPerfect}"><strong>${pct}%</strong></td>
+      <td>${bestObserved.iv.a} / ${bestObserved.iv.d} / ${bestObserved.iv.s}</td>
+      <td>${bestObserved.level}</td>
+      <td>${bestObserved.sp.toLocaleString()}</td>
+    </tr>`;
   }
 
   function update() {
@@ -407,44 +452,18 @@
       </div>
     `;
 
-    // --- POPULATE PVP RANKINGS ---
-    let gl = findBestPvP(data, 1500);
-    let ul = findBestPvP(data, 2500);
-    let mlSp = getStatProduct(data.atk, data.def, data.sta, 15, 15, 15, CPM[50]);
-    
-    ui.pvpBody.innerHTML = `
-      <tr>
-        <td><strong>Great League</strong></td>
-        <td>#1</td>
-        <td>${gl.a} / ${gl.d} / ${gl.s}</td>
-        <td>${gl.level}</td>
-        <td>${gl.sp.toLocaleString()}</td>
-      </tr>
-      <tr>
-        <td><strong>Ultra League</strong></td>
-        <td>#1</td>
-        <td>${ul.a} / ${ul.d} / ${ul.s}</td>
-        <td>${ul.level}</td>
-        <td>${ul.sp.toLocaleString()}</td>
-      </tr>
-      <tr>
-        <td><strong>Master League</strong></td>
-        <td>#1</td>
-        <td class="perfect-iv">15 / 15 / 15</td>
-        <td>50</td>
-        <td>${mlSp.toLocaleString()}</td>
-      </tr>
-      <tr>
-        <td><strong>PVE (Raids)</strong></td>
-        <td>#1</td>
-        <td class="perfect-iv">15 / 15 / 15</td>
-        <td>50</td>
-        <td>MAX</td>
-      </tr>
-    `;
+    let ranks = getSpeciesRanks(name, data);
 
+    // If a Pokémon is entered but NO CP is entered, show the Species absolute Rank 1 stats
     if (!cpInput) {
        ui.results.innerHTML = "<div class='placeholder-text'><div style='font-size:24px; margin-bottom:10px;'>⌨️</div>Enter CP to evaluate...</div>";
+       
+       let lcRow = ranks.LC.sp > 0 ? makeRowRank1("Little Cup", ranks.LC) : "";
+       let glRow = ranks.GL.sp > 0 ? makeRowRank1("Great League", ranks.GL) : "";
+       let ulRow = ranks.UL.sp > 0 ? makeRowRank1("Ultra League", ranks.UL) : "";
+       let mlRow = makeRowRank1("Master / PVE", ranks.ML);
+       
+       ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
        return;
     }
 
@@ -465,12 +484,12 @@
 
     if (matches.length === 0) {
       ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${cpInput} at Level ${level}.</strong><br>Try sliding the color up or down slightly.</div>`;
+      ui.pvpBody.innerHTML = `<tr><td colspan="5" class="placeholder-text" style="padding: 20px;">No valid combinations found.</td></tr>`;
     } else {
       matches.sort((x, y) => y.total - x.total);
       
       let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted);">${matches.length} POSSIBILITIES FOUND</div>`;
       htmlOut += `<table class="results-table">`;
-      
       matches.forEach(m => {
         let isPerfect = m.total === "100.0" ? "perfect-iv" : "";
         htmlOut += `
@@ -484,6 +503,32 @@
       });
       htmlOut += `</table>`;
       ui.results.innerHTML = htmlOut;
+
+      // --- CALCULATE BEST POSSIBLE POTENTIAL OF THE OBSERVED CATCH ---
+      let bestLC = { sp: 0 }, bestGL = { sp: 0 }, bestUL = { sp: 0 }, bestML = { sp: 0 };
+      
+      matches.forEach(m => {
+         let lc = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 500, level);
+         if (lc.sp > bestLC.sp) bestLC = { iv: m, ...lc };
+         
+         let gl = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 1500, level);
+         if (gl.sp > bestGL.sp) bestGL = { iv: m, ...gl };
+         
+         let ul = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 2500, level);
+         if (ul.sp > bestUL.sp) bestUL = { iv: m, ...ul };
+         
+         // Master League has essentially no cap (level 50)
+         let ml = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 10000, level);
+         if (ml.sp > bestML.sp) bestML = { iv: m, ...ml };
+      });
+
+      // Assemble PVP table based on the best matched possibilities vs. the absolute Rank 1
+      let lcRow = ranks.LC.sp > 0 ? makeRowObserved("Little Cup", bestLC, ranks.LC) : "";
+      let glRow = ranks.GL.sp > 0 ? makeRowObserved("Great League", bestGL, ranks.GL) : "";
+      let ulRow = ranks.UL.sp > 0 ? makeRowObserved("Ultra League", bestUL, ranks.UL) : "";
+      let mlRow = makeRowObserved("Master / PVE", bestML, ranks.ML);
+      
+      ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
     }
   }
 
