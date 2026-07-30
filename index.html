@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Added maximum-scale to prevent annoying iPhone zoom on tap -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Wild Encounter IV & Color Matcher</title>
 <style>
@@ -10,18 +11,26 @@
   label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #333; }
   input[type="text"], input[type="number"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
   
+  /* Custom Autocomplete Dropdown */
   .autocomplete-container { position: relative; width: 100%; }
   .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background-color: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
   .autocomplete-items div { padding: 12px; cursor: pointer; border-bottom: 1px solid #d4d4d4; font-size: 16px; }
   .autocomplete-items div:active { background-color: #e9e9e9; }
 
+  /* Dynamic Color Slider Styling */
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin-top: 15px; }
   input[type=range]:focus { outline: none; }
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #ddd; border-radius: 3px; }
   input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%;
-    background: var(--thumb-color, #00ff00); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    cursor: pointer; margin-top: -11px;
+    -webkit-appearance: none;
+    height: 28px;
+    width: 28px;
+    border-radius: 50%;
+    background: var(--thumb-color, #00ff00);
+    border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    cursor: pointer;
+    margin-top: -11px;
   }
   
   .checkbox-group { display: flex; align-items: center; margin-top: 15px; font-weight: bold; font-size: 14px; }
@@ -30,7 +39,6 @@
   .results { margin-top: 20px; padding: 15px; background: #e8f0fe; border-radius: 8px; font-size: 14px; max-height: 250px; overflow-y: auto; }
   .match { border-bottom: 1px solid #ccc; padding: 8px 0; }
   .match:last-child { border-bottom: none; }
-  .error { color: #d32f2f; background: #ffebee; }
 </style>
 </head>
 <body>
@@ -51,6 +59,9 @@
     <input type="checkbox" id="weather"> Weather Boosted? (Minimum 4/4/4 IVs)
   </div>
 
+  <label>Trainer Level (Max 80)</label>
+  <input type="number" id="trainerLevel" value="50" max="80">
+
   <label>Match Catch Circle Color (Level 1-50)</label>
   <p style="font-size:12px; color:#666; margin-top:0;">Slide to match the exact ring color on your screen.</p>
   <input type="range" id="levelSlider" min="1" max="50" value="15">
@@ -58,7 +69,7 @@
 </div>
 
 <div class="card results" id="results">
-  <em>Loading live Pokémon database... this may take a few seconds on mobile.</em>
+  <em>Loading live Pokémon database...</em>
 </div>
 
 <script>
@@ -83,41 +94,20 @@
     results: document.getElementById('results')
   };
 
-  // NEW JSONP LOAD DATA FUNCTION (Bypasses Safari Local File Security)
-  function loadData() {
-    let statsLoaded = false;
-    let encountersLoaded = false;
-    let statsData = null;
-    let encountersData = null;
+  async function loadData() {
+    try {
+      const [statsRes, encounterRes] = await Promise.all([
+        fetch('https://pogoapi.net/api/v1/pokemon_stats.json'),
+        fetch('https://pogoapi.net/api/v1/pokemon_encounter_data.json')
+      ]);
+      const stats = await statsRes.json();
+      const encounters = await encounterRes.json();
 
-    // Define Global Callbacks for JSONP
-    window.parsePokemonStats = function(response) {
-      try {
-        statsData = JSON.parse(response.contents);
-        statsLoaded = true;
-        processAPI();
-      } catch (e) { triggerError(); }
-    };
-
-    window.parsePokemonEncounters = function(response) {
-      try {
-        encountersData = JSON.parse(response.contents);
-        encountersLoaded = true;
-        processAPI();
-      } catch (e) { triggerError(); }
-    };
-
-    function processAPI() {
-      if (!statsLoaded || !encountersLoaded) return; // Wait for both
-
-      // Process Stats
-      statsData.forEach(p => {
+      stats.forEach(p => {
         let name = p.pokemon_name || p.name;
         pokeData[name] = { atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
       });
-      
-      // Process Encounters
-      encountersData.forEach(p => {
+      encounters.forEach(p => {
         let name = p.pokemon_name || p.name;
         if (pokeData[name] && (!p.form || p.form === 'Normal')) {
           pokeData[name].bcr = parseFloat(p.base_capture_rate);
@@ -125,46 +115,28 @@
       });
 
       pokemonNames = Object.keys(pokeData).filter(n => pokeData[n].bcr).sort();
-      ui.results.classList.remove('error');
       ui.results.innerHTML = "<em>Database loaded! Enter Pokémon, CP, and match color.</em>";
+    } catch(e) {
+      ui.results.innerHTML = "Error loading API data. Please check your internet connection.";
     }
-
-    function triggerError() {
-      ui.results.classList.add('error');
-      ui.results.innerHTML = `<strong>Failed to load data.</strong><br>Check your internet connection.`;
-    }
-
-    // JSONP script injection
-    const proxy = 'https://api.allorigins.win/get?url=';
-    
-    const statsScript = document.createElement('script');
-    statsScript.src = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_stats.json') + '&callback=parsePokemonStats';
-    statsScript.onerror = triggerError;
-    document.body.appendChild(statsScript);
-
-    const encountersScript = document.createElement('script');
-    encountersScript.src = proxy + encodeURIComponent('https://pogoapi.net/api/v1/pokemon_encounter_data.json') + '&callback=parsePokemonEncounters';
-    encountersScript.onerror = triggerError;
-    document.body.appendChild(encountersScript);
-
-    // 10 Second timeout fallback
-    setTimeout(() => {
-      if (!statsLoaded || !encountersLoaded) triggerError();
-    }, 10000);
   }
 
+  // --- New Custom Autocomplete Logic ---
   ui.poke.addEventListener('input', function() {
     let val = this.value;
-    ui.list.innerHTML = ''; 
+    ui.list.innerHTML = ''; // clear current list
     if (!val) return;
     
+    // Filter and limit to 8 results so it doesn't cover the whole phone screen
     let matches = pokemonNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
     
     matches.forEach(name => {
       let item = document.createElement("div");
+      // Bold the matching part of the string
       let regex = new RegExp(`(${val})`, "gi");
       item.innerHTML = name.replace(regex, "<strong>$1</strong>");
       
+      // Select the item on tap
       item.addEventListener("click", function() {
         ui.poke.value = name;
         ui.list.innerHTML = '';
@@ -175,6 +147,7 @@
     update();
   });
 
+  // Close the dropdown if you tap anywhere else on the screen
   document.addEventListener("click", function (e) {
     if (e.target !== ui.poke) {
       ui.list.innerHTML = '';
@@ -233,7 +206,7 @@
   }
 
   [ui.cp, ui.weather, ui.slider].forEach(el => el.addEventListener('input', update));
-
+  
   loadData();
 </script>
 </body>
