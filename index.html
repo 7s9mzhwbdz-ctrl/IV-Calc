@@ -363,7 +363,18 @@
     cAtk: document.getElementById('caught-atk'),
     cDef: document.getElementById('caught-def'),
     cSta: document.getElementById('caught-sta'),
+    trainerLvl: document.getElementById('trainerLevel')
   };
+
+  // --- LOCAL STORAGE FOR TRAINER LEVEL ---
+  const savedTrainerLevel = localStorage.getItem('evaluator_trainer_lvl');
+  if (savedTrainerLevel) {
+    ui.trainerLvl.value = savedTrainerLevel;
+  }
+  
+  ui.trainerLvl.addEventListener('input', function() {
+    localStorage.setItem('evaluator_trainer_lvl', this.value);
+  });
 
   async function loadData() {
     try {
