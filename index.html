@@ -56,7 +56,7 @@
     .top-header { flex-direction: column; gap: 15px; align-items: flex-start; }
   }
 
-  /* --- CARDS --- */
+  /* --- CARDS & TABS --- */
   .card {
     background: var(--card-bg);
     border-radius: 12px;
@@ -76,13 +76,18 @@
     margin-bottom: 15px;
     letter-spacing: 0.5px;
   }
+  .input-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+
+  .tabs { display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 20px; border: 1px solid var(--border-light); }
+  .tab { flex: 1; text-align: center; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-muted); transition: 0.2s; border: none; background: transparent; }
+  .tab.active { background: white; color: var(--primary-blue); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
   /* --- INPUTS --- */
-  input[type="text"] {
+  input[type="text"], input[type="number"].box-input {
     width: 100%; padding: 12px 15px; border: 1px solid var(--border-light); border-radius: 8px;
     box-sizing: border-box; font-size: 15px; background: #f9fafb; outline: none; transition: 0.2s;
   }
-  input[type="text"]:focus { border-color: var(--primary-blue); background: #fff; }
+  input[type="text"]:focus, input[type="number"].box-input:focus { border-color: var(--primary-blue); background: #fff; }
 
   /* --- AUTOCOMPLETE --- */
   .autocomplete-container { position: relative; width: 100%; }
@@ -106,22 +111,14 @@
   .related-tag.tag-form { background: #fffbeb; color: #b45309; border-color: #fde68a; }
   .related-tag.tag-form:hover { background: #b45309; color: white; }
   
-  /* Collapsible Forms */
   details.forms-collapse { margin-top: 10px; font-size: 12px; }
-  details.forms-collapse summary {
-    cursor: pointer; color: var(--primary-blue); font-weight: 600;
-    user-select: none; outline: none; padding: 4px 0;
-  }
+  details.forms-collapse summary { cursor: pointer; color: var(--primary-blue); font-weight: 600; user-select: none; outline: none; padding: 4px 0; }
   details.forms-collapse summary:hover { text-decoration: underline; }
   .forms-tag-container { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
 
   /* --- OBSERVED CP --- */
-  .cp-input-container {
-    background: var(--cp-bg); border: 1px solid var(--border-light); border-radius: 8px; padding: 10px; text-align: center;
-  }
-  .cp-input-container input {
-    background: transparent; border: none; font-size: 42px; font-weight: 700; color: var(--cp-text); text-align: center; width: 100%; outline: none;
-  }
+  .cp-input-container { background: var(--cp-bg); border: 1px solid var(--border-light); border-radius: 8px; padding: 10px; text-align: center; }
+  .cp-input-container input { background: transparent; border: none; font-size: 42px; font-weight: 700; color: var(--cp-text); text-align: center; width: 100%; outline: none; }
   .cp-input-container input::placeholder { color: #d1d5db; font-size: 24px; vertical-align: middle; }
 
   /* --- WEATHER TOGGLE --- */
@@ -163,15 +160,7 @@
   .stat-pill { background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
   .perfect-iv { color: #d97706; font-weight: bold; }
   
-  .scrollable-matches {
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    background: #ffffff;
-  }
-  
-  /* Selectable Rows Styling */
+  .scrollable-matches { max-height: 250px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 8px; background: #ffffff; }
   .match-row { cursor: pointer; transition: background 0.15s; }
   .match-row:hover { background-color: #f9fafb; }
   .selected-row { background-color: #e0e7ff !important; box-shadow: inset 4px 0 0 #3730a3; }
@@ -197,6 +186,11 @@
   <!-- LEFT COLUMN -->
   <div class="col-left">
     
+    <div class="tabs">
+      <button id="btn-wild" class="tab active" onclick="setMode('wild')">Wild Encounter</button>
+      <button id="btn-caught" class="tab" onclick="setMode('caught')">Already Caught</button>
+    </div>
+
     <div class="card">
       <div class="card-header">Identify Target</div>
       <div class="autocomplete-container">
@@ -206,36 +200,64 @@
       <div id="related-pokemon"></div>
     </div>
 
-    <div class="card">
-      <div class="card-header">Observed CP</div>
-      <div class="cp-input-container">
-        <input type="number" id="cp" placeholder="10">
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="weather-row">
-        <div class="weather-info">
-          <strong>Weather Boost</strong>
-          <span>Increases level & IV floor</span>
+    <!-- Inputs for WILD ENCOUNTER mode -->
+    <div id="wild-inputs">
+      <div class="card">
+        <div class="card-header">Observed CP</div>
+        <div class="cp-input-container">
+          <input type="number" id="cp" placeholder="10">
         </div>
-        <label class="switch">
-          <input type="checkbox" id="weather">
-          <span class="slider-toggle"></span>
-        </label>
+      </div>
+
+      <div class="card">
+        <div class="weather-row">
+          <div class="weather-info">
+            <strong>Weather Boost</strong>
+            <span>Increases level & IV floor</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="weather">
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="slider-header-row">
+          <div class="card-header" style="margin:0;">Catch Circle Color</div>
+          <div class="level-badge" id="levelDisplay">Lvl 15 (±2)</div>
+        </div>
+        <div class="range-container">
+          <input type="range" id="levelSlider" min="1" max="50" value="15">
+          <div class="slider-labels">
+            <span>Easy (Lvl 1)</span>
+            <span>Hard (Lvl 50)</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="slider-header-row">
-        <div class="card-header" style="margin:0;">Catch Circle Color</div>
-        <div class="level-badge" id="levelDisplay">Lvl 15 (±2)</div>
-      </div>
-      <div class="range-container">
-        <input type="range" id="levelSlider" min="1" max="50" value="15">
-        <div class="slider-labels">
-          <span>Easy (Lvl 1)</span>
-          <span>Hard (Lvl 50)</span>
+    <!-- Inputs for ALREADY CAUGHT mode -->
+    <div id="caught-inputs" style="display: none;">
+      <div class="card">
+        <div class="card-header">Exact Stats</div>
+        
+        <label class="input-label">Current Level (1-50)</label>
+        <input type="number" class="box-input" id="caught-level" min="1" max="50" step="0.5" value="15">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px;">
+          <div>
+            <label class="input-label">Attack</label>
+            <input type="number" class="box-input" id="caught-atk" min="0" max="15" value="15">
+          </div>
+          <div>
+            <label class="input-label">Defense</label>
+            <input type="number" class="box-input" id="caught-def" min="0" max="15" value="15">
+          </div>
+          <div>
+            <label class="input-label">Stamina</label>
+            <input type="number" class="box-input" id="caught-sta" min="0" max="15" value="15">
+          </div>
         </div>
       </div>
     </div>
@@ -270,7 +292,7 @@
       </table>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-possibilities">
       <div class="card-header">IV Probability Match</div>
       <div id="results">
         <div class="placeholder-text">
@@ -283,7 +305,8 @@
 </div>
 
 <script>
-  const CPM = [
+  // Base integer levels (1 to 50)
+  const CPM_BASE = [
     0, 0.094, 0.16639787, 0.21573247, 0.25572005, 0.29024988, 0.3210876, 0.34921268, 0.37523559, 0.39956728, 
     0.42250001, 0.44310755, 0.46279839, 0.48168495, 0.49985844, 0.51739395, 0.53435433, 0.55079269, 0.56675452, 0.58227891, 
     0.59740001, 0.61215729, 0.62656713, 0.64065295, 0.65443563, 0.667934, 0.68116492, 0.69414365, 0.70688421, 0.71939909, 
@@ -292,12 +315,21 @@
     0.84029999
   ];
 
+  // Helper to accurately get CPM for half-levels (needed for exact PVP projections)
+  function getCPM(level) {
+    if (Number.isInteger(level)) return CPM_BASE[level];
+    let lower = Math.floor(level);
+    let upper = Math.ceil(level);
+    if (upper > 50) return CPM_BASE[50]; 
+    return Math.sqrt((Math.pow(CPM_BASE[lower], 2) + Math.pow(CPM_BASE[upper], 2)) / 2);
+  }
+
   let pokeData = {};
   let pokemonNames = [];
   let evoData = {}; 
   let cachedRanks = {}; 
   
-  // State variables for matches and selection
+  let isCaughtMode = false;
   let currentMatches = [];
   let selectedMatch = null;
   
@@ -311,7 +343,13 @@
     levelDisp: document.getElementById('levelDisplay'),
     results: document.getElementById('results'),
     pveResults: document.getElementById('pve-results'),
-    pvpBody: document.getElementById('pvp-results-body')
+    pvpBody: document.getElementById('pvp-results-body'),
+    
+    // Caught Mode Inputs
+    cLevel: document.getElementById('caught-level'),
+    cAtk: document.getElementById('caught-atk'),
+    cDef: document.getElementById('caught-def'),
+    cSta: document.getElementById('caught-sta'),
   };
 
   async function loadData() {
@@ -323,10 +361,14 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
+      const junkForms = ['purified', 'costume', 'hat', 'crown', 'flower', '2019', '2020', '2021', '2022', '2023', '2024', 'clone', 'libre', 'star', 'holiday', 'event', 'anniversary', 'winter', 'summer', 'fall', 'spring', 'bowtie', 'scarf', 'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 'trick', 'treat', 'spooky', 'fragment', 'explorer'];
+
       stats.forEach(p => {
         let name = p.pokemon_name;
         if (p.form && p.form !== 'Normal') {
-          if (p.form === 'Shadow' || p.form === 'Purified') return; 
+          let fLow = p.form.toLowerCase();
+          // Skip junk costumes and clones completely
+          if (junkForms.some(w => fLow.includes(w))) return;
           name = `${p.pokemon_name} (${p.form})`;
         }
         pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
@@ -348,7 +390,22 @@
     }
   }
 
-  // Handle Autocomplete
+  // --- MODE TOGGLER ---
+  window.setMode = function(mode) {
+    isCaughtMode = (mode === 'caught');
+    document.getElementById('btn-wild').classList.toggle('active', !isCaughtMode);
+    document.getElementById('btn-caught').classList.toggle('active', isCaughtMode);
+    
+    document.getElementById('wild-inputs').style.display = isCaughtMode ? 'none' : 'block';
+    document.getElementById('caught-inputs').style.display = isCaughtMode ? 'block' : 'none';
+    
+    // Hide the possibilities table entirely in Caught mode (since you already know the exact IVs)
+    document.getElementById('card-possibilities').style.display = isCaughtMode ? 'none' : 'block';
+    
+    calculateMatches();
+  };
+
+  // --- AUTOCOMPLETE ---
   window.selectPokemon = function(name) {
     ui.poke.value = name;
     ui.list.innerHTML = '';
@@ -389,7 +446,7 @@
     calculateMatches();
   });
 
-  // Math Functions
+  // --- MATH FUNCTIONS ---
   function calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
     let atk = parseInt(baseAtk) + ivA;
     let def = parseInt(baseDef) + ivD;
@@ -409,11 +466,12 @@
     if (cachedRanks[name]) return cachedRanks[name];
     let best = { LC: {sp: 0}, GL: {sp: 0}, UL: {sp: 0} };
 
+    // Steps by 0.5 to perfectly accurately catch Rank 1s that land on half-levels
     for (let a = 0; a <= 15; a++) {
       for (let d = 0; d <= 15; d++) {
         for (let s = 0; s <= 15; s++) {
-          for (let lvl = 1; lvl <= 50; lvl++) {
-            let cpm = CPM[lvl];
+          for (let lvl = 1; lvl <= 50; lvl += 0.5) {
+            let cpm = getCPM(lvl);
             let cp = calculateCP(data.atk, data.def, data.sta, a, d, s, cpm);
             let sp = getStatProduct(data.atk, data.def, data.sta, a, d, s, cpm);
             
@@ -426,7 +484,7 @@
       }
     }
     
-    let mlSp = getStatProduct(data.atk, data.def, data.sta, 15, 15, 15, CPM[50]);
+    let mlSp = getStatProduct(data.atk, data.def, data.sta, 15, 15, 15, getCPM(50));
     best.ML = { a: 15, d: 15, s: 15, level: 50, sp: mlSp };
     cachedRanks[name] = best;
     return best;
@@ -434,8 +492,9 @@
 
   function getBestForIV(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cap, minLevel) {
     let bestLevel = 0, maxSp = 0;
-    for (let lvl = minLevel; lvl <= 50; lvl++) {
-      let cpm = CPM[lvl];
+    // Projects potential by stepping up by 0.5 levels
+    for (let lvl = minLevel; lvl <= 50; lvl += 0.5) {
+      let cpm = getCPM(lvl);
       let cp = calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm);
       if (cp <= cap) {
         let sp = getStatProduct(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm);
@@ -462,7 +521,7 @@
     return [...new Set(finals)].filter(f => pokeData[f]);
   }
 
-  // Row Generating Helpers
+  // --- RENDER HELPERS ---
   function makeRowRank1(leagueName, rank1) {
     return `<tr>
       <td><strong>${leagueName}</strong></td>
@@ -477,7 +536,7 @@
     if (bestObserved.sp === 0) {
       return `<tr>
         <td><strong>${leagueName}</strong></td>
-        <td colspan="4" style="color: var(--text-muted); font-size: 12px; font-style: italic;">N/A (Current CP exceeds cap)</td>
+        <td colspan="4" style="color: var(--text-muted); font-size: 12px; font-style: italic;">N/A (Current CP/Level exceeds cap)</td>
       </tr>`;
     }
     let pct = ((bestObserved.sp / rank1.sp) * 100).toFixed(2);
@@ -491,7 +550,6 @@
     </tr>`;
   }
 
-  // Display Renderers
   function renderPVE(name, data) {
     let familyHtml = "";
     let formsHtml = "";
@@ -510,7 +568,7 @@
       forms.forEach(p => formTags += makeTag("Form", p, "tag-form"));
       formsHtml = `
         <details class="forms-collapse">
-          <summary>View Alternative Forms (${forms.length})</summary>
+          <summary>▶ View Alternative Forms (${forms.length})</summary>
           <div class="forms-tag-container">${formTags}</div>
         </details>
       `;
@@ -555,6 +613,8 @@
   }
 
   function renderIVList() {
+    if (isCaughtMode) return; // Handled dynamically, list is hidden in caught mode
+
     if (currentMatches.length === 0) {
       ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} near Level ${ui.slider.value}.</strong><br>Try sliding the color up or down slightly.</div>`;
       return;
@@ -647,7 +707,7 @@
     ui.pvpBody.innerHTML = finalHtml;
   }
 
-  // Event Handlers for UI Selection
+  // --- SELECTION & CALCULATION ---
   window.selectMatch = function(id) {
     if (selectedMatch && selectedMatch.id === id) {
       selectedMatch = null; 
@@ -668,14 +728,34 @@
 
   function calculateMatches() {
     let name = ui.poke.value;
-    let cpInput = parseInt(ui.cp.value);
-    let baseLevel = parseInt(ui.slider.value);
-    let isWeather = ui.weather.checked;
     let data = pokeData[name];
-
     if (!data) return; 
 
     renderPVE(name, data);
+    currentMatches = [];
+
+    // ALREADY CAUGHT MODE LOGIC
+    if (isCaughtMode) {
+      let l = parseFloat(ui.cLevel.value) || 1;
+      let a = parseInt(ui.cAtk.value) || 0;
+      let d = parseInt(ui.cDef.value) || 0;
+      let s = parseInt(ui.cSta.value) || 0;
+      
+      currentMatches.push({
+        a, d, s, level: l, 
+        total: ((a + d + s) / 45 * 100).toFixed(1),
+        id: `caught-${l}-${a}-${d}-${s}`
+      });
+      
+      selectedMatch = currentMatches[0];
+      renderPVPTable(name, data);
+      return; // Skip wild logic entirely
+    }
+
+    // WILD ENCOUNTER LOGIC
+    let cpInput = parseInt(ui.cp.value);
+    let baseLevel = parseInt(ui.slider.value);
+    let isWeather = ui.weather.checked;
 
     if (!cpInput) {
        ui.results.innerHTML = "<div class='placeholder-text'>Enter CP to evaluate possibilities...</div>";
@@ -683,12 +763,11 @@
        return;
     }
 
-    // --- POPULATE OBSERVED CP POSSIBILITIES (±2 Levels) ---
-    currentMatches = [];
     let minIV = isWeather ? 4 : 0;
     
+    // Wild levels are strictly whole numbers 1-50
     for (let l = Math.max(1, baseLevel - 2); l <= Math.min(50, baseLevel + 2); l++) {
-      let cpm = CPM[l];
+      let cpm = getCPM(l);
       for (let a = minIV; a <= 15; a++) {
         for (let d = minIV; d <= 15; d++) {
           for (let s = minIV; s <= 15; s++) {
@@ -714,7 +793,8 @@
     renderPVPTable(name, data);
   }
 
-  [ui.cp, ui.weather].forEach(el => el.addEventListener('input', calculateMatches));
+  // Bind Events for both Modes
+  [ui.cp, ui.weather, ui.cLevel, ui.cAtk, ui.cDef, ui.cSta].forEach(el => el.addEventListener('input', calculateMatches));
   
   loadData();
 </script>
