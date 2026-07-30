@@ -131,7 +131,7 @@
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
     background: var(--thumb-color, #ffeb3b); border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    cursor: pointer; margin-top: -8px; transition: background 0.2s;
+    cursor: pointer; margin-top: -8px; transition: background 0.1s;
   }
   .slider-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted); font-weight: 600; }
 
@@ -234,21 +234,21 @@
     </div>
 
     <div class="card">
-      <div class="card-header"><span class="icon" style="background:#f59e0b;">🏆</span> Best Possible PVP Rankings</div>
+      <div class="card-header"><span class="icon" style="background:#f59e0b;">🏆</span> Best Possible Rankings</div>
       <table class="results-table">
         <thead>
           <tr>
-            <th>League</th>
+            <th>Format</th>
             <th>Rank</th>
             <th>IVs (A/D/S)</th>
             <th>Level</th>
             <th>Stat Product</th>
           </tr>
         </thead>
+        <tbody id="pvp-results-body">
+          <tr><td colspan="5" class="placeholder-text" style="padding: 20px;">Awaiting Pokémon selection...</td></tr>
+        </tbody>
       </table>
-      <div class="placeholder-text" style="padding: 20px;">
-        Awaiting input combination...
-      </div>
     </div>
 
   </div>
@@ -276,7 +276,8 @@
     slider: document.getElementById('levelSlider'),
     levelDisp: document.getElementById('levelDisplay'),
     results: document.getElementById('results'),
-    pveResults: document.getElementById('pve-results')
+    pveResults: document.getElementById('pve-results'),
+    pvpBody: document.getElementById('pvp-results-body')
   };
 
   async function loadData() {
@@ -333,12 +334,59 @@
     }
   });
 
+  // Mathematically tie the thumb color strictly to its position on the 1-50 slider
+  function updateSliderVisuals() {
+    let level = parseInt(ui.slider.value);
+    ui.levelDisp.innerText = `Lvl ${level}`;
+    // Map Level 1 (Green: 120 HSL) to Level 50 (Red: 0 HSL) to match underlying gradient track
+    let hue = 120 - ((level - 1) / 49) * 120;
+    ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
+  }
+  
+  // Set slider color on initial page load
+  updateSliderVisuals();
+
+  ui.slider.addEventListener('input', function() {
+    updateSliderVisuals();
+    update();
+  });
+
   function calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
     let atk = parseInt(baseAtk) + ivA;
     let def = parseInt(baseDef) + ivD;
     let sta = parseInt(baseSta) + ivS;
     let cp = (atk * Math.sqrt(def) * Math.sqrt(sta) * Math.pow(cpm, 2)) / 10;
     return Math.max(10, Math.floor(cp));
+  }
+
+  function getStatProduct(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
+    let atk = (baseAtk + ivA) * cpm;
+    let def = (baseDef + ivD) * cpm;
+    let sta = Math.floor((baseSta + ivS) * cpm);
+    return Math.round(atk * def * sta);
+  }
+
+  function findBestPvP(data, cap) {
+    let best = { a: 0, d: 0, s: 0, level: 0, sp: 0 };
+    for (let a = 0; a <= 15; a++) {
+      for (let d = 0; d <= 15; d++) {
+        for (let s = 0; s <= 15; s++) {
+          for (let lvl = 1; lvl <= 50; lvl++) {
+            let cpm = CPM[lvl];
+            let cp = calculateCP(data.atk, data.def, data.sta, a, d, s, cpm);
+            if (cp <= cap) {
+              let sp = getStatProduct(data.atk, data.def, data.sta, a, d, s, cpm);
+              if (sp > best.sp) {
+                best = { a, d, s, level: lvl, sp: sp };
+              }
+            } else {
+              break; // Stop checking higher levels if CP cap is exceeded
+            }
+          }
+        }
+      }
+    }
+    return best;
   }
 
   function update() {
@@ -348,32 +396,62 @@
     let isWeather = ui.weather.checked;
     let data = pokeData[name];
 
-    ui.levelDisp.innerText = `Lvl ${level}`;
-
     if (!data) return; 
 
-    // Populate PVE stats card
+    // --- POPULATE PVE STATS ---
     ui.pveResults.innerHTML = `
       <div style="display: flex; gap: 15px; margin-top: 10px;">
-        <div><strong>Base Attack:</strong> <span class="stat-pill">${data.atk}</span></div>
-        <div><strong>Base Defense:</strong> <span class="stat-pill">${data.def}</span></div>
-        <div><strong>Base Stamina:</strong> <span class="stat-pill">${data.sta}</span></div>
+        <div><strong>Attack:</strong> <span class="stat-pill">${data.atk}</span></div>
+        <div><strong>Defense:</strong> <span class="stat-pill">${data.def}</span></div>
+        <div><strong>Stamina:</strong> <span class="stat-pill">${data.sta}</span></div>
       </div>
     `;
 
-    // Dynamic slider thumb coloring
-    let cpm = CPM[level];
-    let prob = 1 - Math.pow(1 - (data.bcr / (2 * cpm)), 1);
-    let hue = Math.max(0, Math.min(120, prob * 120));
-    ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
+    // --- POPULATE PVP RANKINGS ---
+    let gl = findBestPvP(data, 1500);
+    let ul = findBestPvP(data, 2500);
+    let mlSp = getStatProduct(data.atk, data.def, data.sta, 15, 15, 15, CPM[50]);
+    
+    ui.pvpBody.innerHTML = `
+      <tr>
+        <td><strong>Great League</strong></td>
+        <td>#1</td>
+        <td>${gl.a} / ${gl.d} / ${gl.s}</td>
+        <td>${gl.level}</td>
+        <td>${gl.sp.toLocaleString()}</td>
+      </tr>
+      <tr>
+        <td><strong>Ultra League</strong></td>
+        <td>#1</td>
+        <td>${ul.a} / ${ul.d} / ${ul.s}</td>
+        <td>${ul.level}</td>
+        <td>${ul.sp.toLocaleString()}</td>
+      </tr>
+      <tr>
+        <td><strong>Master League</strong></td>
+        <td>#1</td>
+        <td class="perfect-iv">15 / 15 / 15</td>
+        <td>50</td>
+        <td>${mlSp.toLocaleString()}</td>
+      </tr>
+      <tr>
+        <td><strong>PVE (Raids)</strong></td>
+        <td>#1</td>
+        <td class="perfect-iv">15 / 15 / 15</td>
+        <td>50</td>
+        <td>MAX</td>
+      </tr>
+    `;
 
     if (!cpInput) {
        ui.results.innerHTML = "<div class='placeholder-text'><div style='font-size:24px; margin-bottom:10px;'>⌨️</div>Enter CP to evaluate...</div>";
        return;
     }
 
+    // --- POPULATE OBSERVED CP POSSIBILITIES ---
     let matches = [];
     let minIV = isWeather ? 4 : 0;
+    let cpm = CPM[level];
     
     for (let a = minIV; a <= 15; a++) {
       for (let d = minIV; d <= 15; d++) {
@@ -409,7 +487,7 @@
     }
   }
 
-  [ui.cp, ui.weather, ui.slider].forEach(el => el.addEventListener('input', update));
+  [ui.cp, ui.weather].forEach(el => el.addEventListener('input', update));
   
   loadData();
 </script>
