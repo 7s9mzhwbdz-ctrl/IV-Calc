@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Wild Encounter IV & Color Matcher</title>
+<title>Wild Encounter IV Evaluator</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -69,14 +69,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--primary-blue);
     text-transform: uppercase;
     margin-bottom: 15px;
     letter-spacing: 0.5px;
   }
-  .card-header .icon { background: var(--primary-blue); color: white; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 12px; }
 
   /* --- INPUTS --- */
   input[type="text"] {
@@ -113,12 +112,12 @@
   .switch input { opacity: 0; width: 0; height: 0; }
   .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
   .slider-toggle:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-  input:checked + .slider-toggle { background-color: #ff9800; }
+  input:checked + .slider-toggle { background-color: #3c52b2; }
   input:checked + .slider-toggle:before { transform: translateX(20px); }
 
   /* --- CATCH CIRCLE SLIDER --- */
   .slider-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-  .level-badge { border: 2px solid var(--accent-yellow); color: var(--accent-yellow); padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; background: #fffdf0; }
+  .level-badge { border: 2px solid var(--primary-blue); color: var(--primary-blue); padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; background: #f4f6fc; }
   
   .range-container { margin-top: 10px; }
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
@@ -135,19 +134,27 @@
   .placeholder-text { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 20px; }
   
   .results-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
-  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
+  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; padding: 10px 0; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: white;}
   .results-table td { padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
   .results-table tr:last-child td { border-bottom: none; }
 
   .stat-pill { background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
   .perfect-iv { color: #d97706; font-weight: bold; }
+  
+  .scrollable-matches {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: #ffffff;
+  }
 </style>
 </head>
 <body>
 
 <div class="top-header">
   <div class="header-left">
-    <h1><span style="font-size:24px; margin:0;">🎯</span> Wild IV Evaluator</h1>
+    <h1>Wild IV Evaluator</h1>
     <span>Field Researcher Tools</span>
   </div>
   <div class="header-right">
@@ -164,15 +171,15 @@
   <div class="col-left">
     
     <div class="card">
-      <div class="card-header"><span class="icon">📍</span> Identify Target</div>
+      <div class="card-header">Identify Target</div>
       <div class="autocomplete-container">
-        <input type="text" id="pokemon" placeholder="🔍 e.g. Pawmi, Lunatone..." autocomplete="off">
+        <input type="text" id="pokemon" placeholder="e.g. Pawmi, Skeledirge, Lunatone..." autocomplete="off">
         <div id="autocomplete-list" class="autocomplete-items"></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header"><span class="icon">📊</span> Observed CP</div>
+      <div class="card-header">Observed CP</div>
       <div class="cp-input-container">
         <input type="number" id="cp" placeholder="10">
       </div>
@@ -181,7 +188,7 @@
     <div class="card">
       <div class="weather-row">
         <div class="weather-info">
-          <strong>☀️ Weather Boost</strong>
+          <strong>Weather Boost</strong>
           <span>Increases level & IV floor</span>
         </div>
         <label class="switch">
@@ -193,7 +200,7 @@
 
     <div class="card">
       <div class="slider-header-row">
-        <div class="card-header" style="margin:0;"><span class="icon">🪄</span> Catch Circle Color</div>
+        <div class="card-header" style="margin:0;">Catch Circle Color</div>
         <div class="level-badge" id="levelDisplay">Lvl 15</div>
       </div>
       <div class="range-container">
@@ -211,24 +218,15 @@
   <div class="col-right">
     
     <div class="card">
-      <div class="card-header"><span class="icon" style="background:#6b7280;">⚔️</span> PVE Base Stat Assessment</div>
+      <div class="card-header">PVE Base Stat Assessment</div>
       <div id="pve-results" style="font-size: 15px; color: var(--text-main);">
         Select a Pokémon to view its base strength for Gyms & Raids.
       </div>
     </div>
 
+    <!-- MOVED UP: Rankings are now above the long list of possibilities -->
     <div class="card">
-      <div class="card-header"><span class="icon">📈</span> IV Probability Match</div>
-      <div id="results">
-        <div class="placeholder-text">
-          <div style="font-size:24px; margin-bottom:10px;">⌨️</div>
-          Enter CP to evaluate...
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><span class="icon" style="background:#f59e0b;">🏆</span> Best Possible Rankings</div>
+      <div class="card-header">Best Possible Rankings</div>
       <table class="results-table">
         <thead>
           <tr>
@@ -243,6 +241,15 @@
           <tr><td colspan="5" class="placeholder-text" style="padding: 20px;">Awaiting Pokémon selection...</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">IV Probability Match</div>
+      <div id="results">
+        <div class="placeholder-text">
+          Enter CP to evaluate possibilities...
+        </div>
+      </div>
     </div>
 
   </div>
@@ -260,7 +267,7 @@
 
   let pokeData = {};
   let pokemonNames = [];
-  let cachedRanks = {}; // Speed Optimization: Cache rank 1 species data so slider doesn't lag
+  let cachedRanks = {}; 
   
   const ui = {
     poke: document.getElementById('pokemon'),
@@ -276,25 +283,21 @@
 
   async function loadData() {
     try {
-      const [statsRes, encounterRes] = await Promise.all([
-        fetch('https://pogoapi.net/api/v1/pokemon_stats.json'),
-        fetch('https://pogoapi.net/api/v1/pokemon_encounter_data.json')
-      ]);
+      const statsRes = await fetch('https://pogoapi.net/api/v1/pokemon_stats.json');
       const stats = await statsRes.json();
-      const encounters = await encounterRes.json();
 
       stats.forEach(p => {
-        let name = p.pokemon_name || p.name;
-        pokeData[name] = { atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
-      });
-      encounters.forEach(p => {
-        let name = p.pokemon_name || p.name;
-        if (pokeData[name] && (!p.form || p.form === 'Normal')) {
-          pokeData[name].bcr = parseFloat(p.base_capture_rate);
+        let name = p.pokemon_name;
+        // Include forms, but skip exact shadow/purified clones to prevent autocomplete clutter
+        if (p.form && p.form !== 'Normal') {
+          if (p.form === 'Shadow' || p.form === 'Purified') return; 
+          name = `${p.pokemon_name} (${p.form})`;
         }
+        pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
       });
 
-      pokemonNames = Object.keys(pokeData).filter(n => pokeData[n].bcr).sort();
+      // We no longer filter by encounter data, ensuring newer Gen 9 pokemon (Fuecoco etc.) are accessible
+      pokemonNames = Object.keys(pokeData).sort();
     } catch(e) {
       ui.results.innerHTML = "<div class='placeholder-text'>Error loading API data. Please check your internet connection.</div>";
     }
@@ -356,7 +359,6 @@
     return Math.round(atk * def * sta);
   }
 
-  // Find the absolute highest possible Stat Product across ALL IV combinations for a species
   function getSpeciesRanks(name, data) {
     if (cachedRanks[name]) return cachedRanks[name];
     
@@ -386,7 +388,6 @@
     return best;
   }
 
-  // For a known specific IV combination, find its maximum potential under a cap
   function getBestForIV(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cap, minLevel) {
     let bestLevel = 0, maxSp = 0;
     for (let lvl = minLevel; lvl <= 50; lvl++) {
@@ -396,7 +397,7 @@
         let sp = getStatProduct(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm);
         if (sp > maxSp) { maxSp = sp; bestLevel = lvl; }
       } else {
-        break; // CP strictly increases, so we can stop checking higher levels
+        break; 
       }
     }
     return { sp: maxSp, level: bestLevel };
@@ -439,25 +440,39 @@
 
     if (!data) return; 
 
-    // --- POPULATE PVE STATS ---
+    // Determine PVE Viability
+    let pveEval = "";
+    if (data.atk >= 250) pveEval = "<span style='color: #15803d; font-weight: bold;'>Top-Tier Raid Attacker</span>";
+    else if (data.atk >= 200) pveEval = "<span style='color: #0369a1; font-weight: bold;'>Strong Raid Attacker</span>";
+    else if (data.atk >= 150) pveEval = "<span style='color: #b45309; font-weight: bold;'>Average Attacker</span>";
+    else pveEval = "<span style='color: #be123c; font-weight: bold;'>Not recommended for PVE</span>";
+
+    // --- POPULATE PVE STATS & EXTERNAL LINK ---
     ui.pveResults.innerHTML = `
-      <div style="display: flex; gap: 15px; margin-top: 10px;">
+      <div style="display: flex; gap: 15px; margin-top: 5px; margin-bottom: 15px;">
         <div><strong>Attack:</strong> <span class="stat-pill">${data.atk}</span></div>
         <div><strong>Defense:</strong> <span class="stat-pill">${data.def}</span></div>
         <div><strong>Stamina:</strong> <span class="stat-pill">${data.sta}</span></div>
+      </div>
+      <div style="font-size: 14px; margin-bottom: 15px;">
+        <strong>PVE Viability:</strong> ${pveEval}
+      </div>
+      <div style="border-top: 1px solid var(--border-light); padding-top: 12px; margin-top: 12px;">
+        <a href="https://db.pokemongohub.net/pokemon/${data.id}" target="_blank" style="color: var(--primary-blue); font-weight: 600; text-decoration: none; font-size: 13px;">
+          View Evolutions, Region Forms, Shadows & Megas &rarr;
+        </a>
       </div>
     `;
 
     let ranks = getSpeciesRanks(name, data);
 
-    // If a Pokémon is entered but NO CP is entered, show the Species absolute Rank 1 stats
     if (!cpInput) {
-       ui.results.innerHTML = "<div class='placeholder-text'><div style='font-size:24px; margin-bottom:10px;'>⌨️</div>Enter CP to evaluate...</div>";
+       ui.results.innerHTML = "<div class='placeholder-text'>Enter CP to evaluate possibilities...</div>";
        
        let lcRow = ranks.LC.sp > 0 ? makeRowRank1("Little Cup", ranks.LC) : "";
        let glRow = ranks.GL.sp > 0 ? makeRowRank1("Great League", ranks.GL) : "";
        let ulRow = ranks.UL.sp > 0 ? makeRowRank1("Ultra League", ranks.UL) : "";
-       let mlRow = makeRowRank1("Master / PVE", ranks.ML);
+       let mlRow = makeRowRank1("Master League", ranks.ML);
        
        ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
        return;
@@ -485,22 +500,23 @@
       matches.sort((x, y) => y.total - x.total);
       
       let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted);">${matches.length} POSSIBILITIES FOUND</div>`;
-      htmlOut += `<table class="results-table">`;
+      
+      // Wrapped in a scrolling container
+      htmlOut += `<div class="scrollable-matches"><table class="results-table" style="margin: 0;">`;
       matches.forEach(m => {
         let isPerfect = m.total === "100.0" ? "perfect-iv" : "";
         htmlOut += `
           <tr class="${isPerfect}">
-            <td>ATK: <strong>${m.a}</strong></td>
+            <td style="padding-left: 10px;">ATK: <strong>${m.a}</strong></td>
             <td>DEF: <strong>${m.d}</strong></td>
             <td>STA: <strong>${m.s}</strong></td>
-            <td><strong>${m.total}%</strong></td>
+            <td style="padding-right: 10px;"><strong>${m.total}%</strong></td>
           </tr>
         `;
       });
-      htmlOut += `</table>`;
+      htmlOut += `</table></div>`;
       ui.results.innerHTML = htmlOut;
 
-      // --- CALCULATE BEST POSSIBLE POTENTIAL OF THE OBSERVED CATCH ---
       let bestLC = { sp: 0 }, bestGL = { sp: 0 }, bestUL = { sp: 0 }, bestML = { sp: 0 };
       
       matches.forEach(m => {
@@ -513,16 +529,14 @@
          let ul = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 2500, level);
          if (ul.sp > bestUL.sp) bestUL = { iv: m, ...ul };
          
-         // Master League has essentially no cap (level 50)
          let ml = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 10000, level);
          if (ml.sp > bestML.sp) bestML = { iv: m, ...ml };
       });
 
-      // Assemble PVP table based on the best matched possibilities vs. the absolute Rank 1
       let lcRow = ranks.LC.sp > 0 ? makeRowObserved("Little Cup", bestLC, ranks.LC) : "";
       let glRow = ranks.GL.sp > 0 ? makeRowObserved("Great League", bestGL, ranks.GL) : "";
       let ulRow = ranks.UL.sp > 0 ? makeRowObserved("Ultra League", bestUL, ranks.UL) : "";
-      let mlRow = makeRowObserved("Master / PVE", bestML, ranks.ML);
+      let mlRow = makeRowObserved("Master League", bestML, ranks.ML);
       
       ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
     }
