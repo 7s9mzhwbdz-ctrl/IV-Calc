@@ -106,18 +106,14 @@
     font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; border: 1px solid var(--border-light);
   }
   .related-tag:hover { background: var(--border-light); color: var(--text-main); }
-  
-  /* Tag specific colors */
   .related-tag.tag-evo { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
   .related-tag.tag-evo:hover { background: #3730a3; color: white; }
   .related-tag.tag-form { background: #fffbeb; color: #b45309; border-color: #fde68a; }
   .related-tag.tag-form:hover { background: #b45309; color: white; }
-  .related-tag.tag-shadow { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
-  .related-tag.tag-shadow:hover { background: #4b5563; color: white; }
-  .related-tag.tag-purified { background: #f0fdfa; color: #0f766e; border-color: #ccfbf1; }
-  .related-tag.tag-purified:hover { background: #0f766e; color: white; }
   
-  .forms-section-title { margin-top: 15px; font-size: 11px; color: var(--primary-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  details.forms-collapse { margin-top: 10px; font-size: 12px; }
+  details.forms-collapse summary { cursor: pointer; color: var(--primary-blue); font-weight: 600; user-select: none; outline: none; padding: 4px 0; }
+  details.forms-collapse summary:hover { text-decoration: underline; }
   .forms-tag-container { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
 
   /* --- OBSERVED CP --- */
@@ -139,13 +135,13 @@
 
   /* --- CATCH CIRCLE SLIDER --- */
   .slider-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-  .slack-select { padding: 4px 6px; border: 1px solid var(--border-light); border-radius: 4px; color: var(--text-main); font-weight: 600; font-size: 12px; outline: none; background: white; cursor: pointer; }
   .level-badge { border: 2px solid var(--primary-blue); color: var(--primary-blue); padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; background: #f4f6fc; }
   
   .range-container { margin-top: 10px; }
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
   input[type=range]:focus { outline: none; }
-  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, #4caf50, #ffeb3b, #f44336); border-radius: 4px; }
+  /* Updated to pure HSL values to perfectly match the JS thumb color calculations */
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, hsl(120, 100%, 50%), hsl(60, 100%, 50%), hsl(0, 100%, 50%)); border-radius: 4px; }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
     background: var(--thumb-color, #ffeb3b); border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -174,8 +170,11 @@
 <body>
 
 <div class="top-header">
-    <div class="header-left">
-    <h1>Wild IV Evaluator <small style="font-size: 12px; opacity: 0.7; font-weight: normal; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">v1</small></h1>
+   <div class="header-left">
+    <h1>
+      Wild IV Evaluator 
+      <span style="font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 3px 6px; border-radius: 6px; margin-left: 8px; letter-spacing: 0;">v1.1</span>
+    </h1>
     <span>Field Researcher Tools</span>
   </div>
   <div class="header-right">
@@ -230,16 +229,7 @@
       <div class="card">
         <div class="slider-header-row">
           <div class="card-header" style="margin:0;">Catch Circle Color</div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <select id="levelSlack" class="slack-select">
-              <option value="0">Exact</option>
-              <option value="1">±1 Level</option>
-              <option value="2" selected>±2 Levels</option>
-              <option value="3">±3 Levels</option>
-              <option value="4">±4 Levels</option>
-            </select>
-            <div class="level-badge" id="levelDisplay">Lvl 15</div>
-          </div>
+          <div class="level-badge" id="levelDisplay">Lvl 15 (±2)</div>
         </div>
         <div class="range-container">
           <input type="range" id="levelSlider" min="1" max="50" value="15">
@@ -329,7 +319,6 @@
     0.84029999
   ];
 
-  // Helper to accurately get CPM for half-levels
   function getCPM(level) {
     if (Number.isInteger(level)) return CPM_BASE[level];
     let lower = Math.floor(level);
@@ -354,27 +343,17 @@
     cp: document.getElementById('cp'),
     weather: document.getElementById('weather'),
     slider: document.getElementById('levelSlider'),
-    slack: document.getElementById('levelSlack'),
     levelDisp: document.getElementById('levelDisplay'),
     results: document.getElementById('results'),
     pveResults: document.getElementById('pve-results'),
     pvpBody: document.getElementById('pvp-results-body'),
+    
+    // Caught Mode Inputs
     cLevel: document.getElementById('caught-level'),
     cAtk: document.getElementById('caught-atk'),
     cDef: document.getElementById('caught-def'),
     cSta: document.getElementById('caught-sta'),
-    trainerLvl: document.getElementById('trainerLevel')
   };
-
-  // --- LOCAL STORAGE FOR TRAINER LEVEL ---
-  const savedTrainerLevel = localStorage.getItem('evaluator_trainer_lvl');
-  if (savedTrainerLevel) {
-    ui.trainerLvl.value = savedTrainerLevel;
-  }
-  
-  ui.trainerLvl.addEventListener('input', function() {
-    localStorage.setItem('evaluator_trainer_lvl', this.value);
-  });
 
   async function loadData() {
     try {
@@ -385,29 +364,13 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
-      // Junk forms to wipe out. 'purified' has been removed so it is naturally preserved
-      const junkForms = [
-        'costume', 'hat', 'crown', 'flower', 'clone', 'holiday', 
-        'event', 'anniv', 'winter', 'summer', 'fall', 'spring', 'bowtie', 'scarf', 
-        'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 
-        'trick', 'treat', 'spooky', 'fragment', 'explorer', 'gofest', 'gotour', 
-        'wcs_', 'doctor', 'flying_', 'okinawa', 'goggles', 'monocle', 'horizons', 
-        'jeju', 'kariyushi', 'kurta', 'safari', 'beanie', 'bandana', 'ribbon', 
-        'sweatshirt', 'world', 'rock_star', 'pop_star', 'phd', 'lucha', 'cosplay',
-        'belle', 'libre', 'a_0', 'b_0', 'c_0'
-      ];
+      const junkForms = ['purified', 'costume', 'hat', 'crown', 'flower', '2019', '2020', '2021', '2022', '2023', '2024', 'clone', 'libre', 'star', 'holiday', 'event', 'anniversary', 'winter', 'summer', 'fall', 'spring', 'bowtie', 'scarf', 'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 'trick', 'treat', 'spooky', 'fragment', 'explorer'];
 
       stats.forEach(p => {
         let name = p.pokemon_name;
         if (p.form && p.form !== 'Normal') {
           let fLow = p.form.toLowerCase();
-          
-          // Explicitly protect these from being wiped out just in case they overlap keywords
-          let isSafe = fLow.includes('shadow') || fLow.includes('purified') || fLow.includes('mega') || fLow.includes('primal');
-          
-          // If not safe, wipe out 4-digit years or blacklisted words
-          if (!isSafe && (/\d{4}/.test(fLow) || junkForms.some(w => fLow.includes(w)))) return;
-          
+          if (junkForms.some(w => fLow.includes(w))) return;
           name = `${p.pokemon_name} (${p.form})`;
         }
         pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
@@ -421,17 +384,6 @@
           let evoName = e.form && e.form !== 'Normal' ? `${e.pokemon_name} (${e.form})` : e.pokemon_name;
           evoData[baseName].push(evoName);
         });
-      });
-
-      // Dynamically link Megas and Primals directly as Evolutions so they project in PVP rankings
-      Object.keys(pokeData).forEach(formName => {
-        if (formName.includes('(Mega') || formName.includes('(Primal')) {
-          let baseName = formName.split(' (')[0];
-          if (pokeData[baseName]) {
-            if (!evoData[baseName]) evoData[baseName] = [];
-            if (!evoData[baseName].includes(formName)) evoData[baseName].push(formName);
-          }
-        }
       });
 
       pokemonNames = Object.keys(pokeData).sort();
@@ -448,6 +400,7 @@
     
     document.getElementById('wild-inputs').style.display = isCaughtMode ? 'none' : 'block';
     document.getElementById('caught-inputs').style.display = isCaughtMode ? 'block' : 'none';
+    
     document.getElementById('card-possibilities').style.display = isCaughtMode ? 'none' : 'block';
     
     calculateMatches();
@@ -483,7 +436,7 @@
 
   function updateSliderVisuals() {
     let level = parseInt(ui.slider.value);
-    ui.levelDisp.innerText = `Lvl ${level}`;
+    ui.levelDisp.innerText = `Lvl ${level} (±2)`;
     let hue = 120 - ((level - 1) / 49) * 120;
     ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
   }
@@ -611,16 +564,12 @@
     
     if (forms.length) {
       let formTags = "";
-      forms.forEach(p => {
-        let tagClass = "tag-form";
-        if (p.includes('(Shadow)')) tagClass = "tag-shadow";
-        else if (p.includes('(Purified)')) tagClass = "tag-purified";
-        
-        formTags += makeTag("Form", p, tagClass);
-      });
+      forms.forEach(p => formTags += makeTag("Form", p, "tag-form"));
       formsHtml = `
-        <div class="forms-section-title">Alternative Forms (${forms.length})</div>
-        <div class="forms-tag-container">${formTags}</div>
+        <details class="forms-collapse">
+          <summary>View Alternative Forms (${forms.length})</summary>
+          <div class="forms-tag-container">${formTags}</div>
+        </details>
       `;
     }
     
@@ -666,14 +615,12 @@
     if (isCaughtMode) return; 
 
     if (currentMatches.length === 0) {
-      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} near Level ${ui.slider.value}.</strong><br>Try sliding the color up or down slightly or adjusting the margin of error.</div>`;
+      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} near Level ${ui.slider.value}.</strong><br>Try sliding the color up or down slightly.</div>`;
       return;
     }
-    
-    let slackDisplay = ui.slack.value === "0" ? "EXACT LVL" : `±${ui.slack.value} LVLS`;
 
     let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
-        <span>${currentMatches.length} POSSIBILITIES (${slackDisplay})</span>
+        <span>${currentMatches.length} POSSIBILITIES (±2 LVLS)</span>
         <span style="font-style:italic; font-weight:normal;">Click a row to isolate</span>
     </div>`;
     
@@ -807,7 +754,6 @@
     // WILD ENCOUNTER LOGIC
     let cpInput = parseInt(ui.cp.value);
     let baseLevel = parseInt(ui.slider.value);
-    let slack = parseInt(ui.slack.value);
     let isWeather = ui.weather.checked;
 
     if (!cpInput) {
@@ -818,7 +764,7 @@
 
     let minIV = isWeather ? 4 : 0;
     
-    for (let l = Math.max(1, baseLevel - slack); l <= Math.min(50, baseLevel + slack); l++) {
+    for (let l = Math.max(1, baseLevel - 2); l <= Math.min(50, baseLevel + 2); l++) {
       let cpm = getCPM(l);
       for (let a = minIV; a <= 15; a++) {
         for (let d = minIV; d <= 15; d++) {
@@ -845,8 +791,7 @@
     renderPVPTable(name, data);
   }
 
-  // Bind Events for both Modes
-  [ui.cp, ui.weather, ui.slack, ui.cLevel, ui.cAtk, ui.cDef, ui.cSta].forEach(el => el.addEventListener('input', calculateMatches));
+  [ui.cp, ui.weather, ui.cLevel, ui.cAtk, ui.cDef, ui.cSta].forEach(el => el.addEventListener('input', calculateMatches));
   
   loadData();
 </script>
