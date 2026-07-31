@@ -26,6 +26,12 @@
     color: var(--text-main);
   }
 
+  /* --- SCROLLBAR STYLING --- */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
   /* --- HEADER --- */
   .top-header {
     background: linear-gradient(90deg, var(--primary-blue), var(--header-blue));
@@ -45,12 +51,25 @@
   /* --- LAYOUT --- */
   .dashboard {
     display: grid;
-    grid-template-columns: 1fr 1.2fr 1.2fr;
-    gap: 15px;
+    grid-template-columns: 320px 1fr; /* Fixed Input Column, Flexible Results Column */
+    gap: 20px;
     padding: 20px;
-    max-width: 1400px;
+    max-width: 1500px;
     margin: 0 auto;
     align-items: start;
+  }
+  
+  .results-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Forces Base Stats/Rankings and IVs Side-by-Side */
+    gap: 20px;
+    align-items: start;
+  }
+
+  .results-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
   /* --- CARDS & TABS --- */
@@ -59,7 +78,6 @@
     border-radius: 10px;
     border: 1px solid var(--border-light);
     padding: 15px;
-    margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   }
   .card-header {
@@ -123,9 +141,10 @@
 
   /* --- RESULTS (COLUMNS & GRIDS) --- */
   .placeholder-text { color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px; }
-  .compact-pve-bar { display: flex; justify-content: space-between; align-items: center; background: #f4f6fc; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; }
+  .compact-pve-bar { display: flex; justify-content: space-between; align-items: center; background: #f4f6fc; padding: 10px 15px; border-radius: 6px; font-size: 12px; }
 
-  /* PvP Columns */
+  /* PvP Rankings Panel */
+  .pvp-scroll-box { max-height: calc(100vh - 240px); overflow-y: auto; padding-right: 8px; }
   .evo-header { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin: 15px 0 8px 0; border-bottom: 1px solid var(--border-light); padding-bottom: 4px; }
   .league-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
   .league-card { background: #f9fafb; border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
@@ -136,8 +155,8 @@
   .league-lvl { font-size: 10px; color: var(--text-muted); }
   .league-card.perfect-iv .league-pct { color: #d97706; }
 
-  /* IV Possibility Columns/Chips */
-  .scrollable-matches { max-height: calc(100vh - 180px); overflow-y: auto; padding-right: 4px; }
+  /* IV Possibility Chips */
+  .iv-scroll-box { max-height: calc(100vh - 160px); overflow-y: auto; padding-right: 8px; }
   .iv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
   .iv-chip { background: #fff; border: 1px solid var(--border-light); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: 0.15s; }
   .iv-chip:hover { background: #f9fafb; border-color: #d1d5db; }
@@ -149,19 +168,15 @@
 
   /* --- MOBILE RESPONSIVENESS --- */
   @media (max-width: 1024px) {
-    .dashboard { grid-template-columns: 1fr 1fr; }
-    .col-right { grid-column: span 2; }
-    .scrollable-matches { max-height: 35vh; }
+    .dashboard { grid-template-columns: 1fr; }
+    .results-panel { grid-template-columns: 1fr 1fr; }
+    .iv-scroll-box, .pvp-scroll-box { max-height: 40vh; }
   }
   @media (max-width: 768px) {
-    .dashboard { grid-template-columns: 1fr; padding: 10px; gap: 10px; }
-    .col-right { grid-column: span 1; }
-    .card { padding: 12px; margin-bottom: 0; }
-    .top-header { padding: 10px; }
-    .scrollable-matches { max-height: 35vh; }
+    .results-panel { grid-template-columns: 1fr; }
+    .iv-scroll-box, .pvp-scroll-box { max-height: 35vh; }
     .league-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
     .league-card { padding: 8px 2px; }
-    
     .exact-stats-grid { display: flex !important; gap: 6px !important; }
     .exact-stats-grid > div { flex: 1; }
     .exact-stats-grid input { padding: 8px 4px; text-align: center; }
@@ -172,7 +187,7 @@
 
 <div class="top-header">
   <div class="header-left">
-    <h1>Wild IV Evaluator <span class="version-badge">v1.4</span></h1>
+    <h1>Wild IV Evaluator <span class="version-badge">v1.5</span></h1>
   </div>
   <div class="header-right">
     <div class="trainer-lvl">
@@ -183,15 +198,15 @@
 
 <div class="dashboard">
   
-  <!-- COLUMN 1: INPUTS -->
-  <div class="col-left">
+  <!-- COLUMN 1: INPUTS (Fixed Width) -->
+  <div class="col-inputs">
     <div class="tabs">
       <button id="btn-wild" class="tab active" onclick="setMode('wild')">Wild Encounter</button>
       <button id="btn-caught" class="tab" onclick="setMode('caught')">Already Caught</button>
     </div>
 
     <!-- Search Card -->
-    <div class="card">
+    <div class="card" style="margin-bottom: 20px;">
       <div class="card-header">Target Identification</div>
       <div class="autocomplete-container">
         <input type="text" id="pokemon" placeholder="e.g. Pawmi, Skeledirge..." autocomplete="off">
@@ -201,7 +216,7 @@
     </div>
 
     <!-- Inputs for WILD ENCOUNTER mode -->
-    <div id="wild-inputs" class="card">
+    <div id="wild-inputs" class="card" style="margin-bottom: 20px;">
       <div class="card-header">Encounter Details</div>
       
       <div class="input-group-row">
@@ -226,7 +241,7 @@
             <option value="1">±1 (Tight)</option>
             <option value="2" selected>±2 (Normal)</option>
             <option value="3">±3 (Loose)</option>
-            <option value="all">Scan All</option>
+            <option value="all">Scan All (1-50)</option>
           </select>
           <div class="level-badge" id="levelDisplay">Lvl 15</div>
         </div>
@@ -241,7 +256,7 @@
     </div>
 
     <!-- Inputs for ALREADY CAUGHT mode -->
-    <div id="caught-inputs" class="card" style="display: none;">
+    <div id="caught-inputs" class="card" style="display: none; margin-bottom: 20px;">
       <div class="card-header">Exact Stats</div>
       <div class="exact-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;">
         <div>
@@ -264,37 +279,47 @@
     </div>
   </div>
 
-  <!-- COLUMN 2: ANALYSIS (PvE + PvP Combined) -->
-  <div class="col-middle">
-    <div class="card" style="height: 100%; box-sizing: border-box;">
-      <div class="card-header">Base Stats & Rankings</div>
+  <!-- COLUMN 2: RESULTS (PvE, PvP, and IVs Grid) -->
+  <div class="results-panel">
+    
+    <!-- LEFT HALF OF RESULTS: PvE and PvP Rankings -->
+    <div class="results-column">
       
-      <div id="pve-results">
-        <div class="compact-pve-bar" style="justify-content: center; color: var(--text-muted);">
-          Select a Pokémon to view base stats.
+      <!-- PvE Card -->
+      <div class="card" style="margin:0;">
+        <div class="card-header">PVE Base Stats</div>
+        <div id="pve-results">
+          <div class="compact-pve-bar" style="justify-content: center; color: var(--text-muted);">
+            Select a Pokémon to view base stats.
+          </div>
         </div>
       </div>
 
-      <div id="pvp-results-body">
-        <div class="placeholder-text">Awaiting input...</div>
+      <!-- PvP Rankings Card -->
+      <div class="card" style="flex:1; margin:0; display:flex; flex-direction:column;">
+        <div class="card-header">Best Possible Rankings</div>
+        <div id="pvp-results-body" class="pvp-scroll-box">
+          <div class="placeholder-text">Awaiting input...</div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- COLUMN 3: POSSIBILITIES -->
-  <div class="col-right">
-    <div class="card" id="card-possibilities" style="display:flex; flex-direction:column; height: 100%; box-sizing: border-box;">
-      <div class="card-header">IV Probabilities</div>
-      <div id="results" style="flex: 1;">
-        <div class="placeholder-text">Enter CP to evaluate...</div>
+    </div>
+
+    <!-- RIGHT HALF OF RESULTS: IV Possibilities -->
+    <div class="results-column">
+      <div class="card" id="card-possibilities" style="flex:1; margin:0; display:flex; flex-direction:column;">
+        <div class="card-header">IV Probabilities</div>
+        <div id="results" class="iv-scroll-box">
+          <div class="placeholder-text">Enter CP to evaluate...</div>
+        </div>
       </div>
     </div>
+
   </div>
 
 </div>
 
 <script>
-  // Base integer levels (1 to 50)
   const CPM_BASE = [
     0, 0.094, 0.16639787, 0.21573247, 0.25572005, 0.29024988, 0.3210876, 0.34921268, 0.37523559, 0.39956728, 
     0.42250001, 0.44310755, 0.46279839, 0.48168495, 0.49985844, 0.51739395, 0.53435433, 0.55079269, 0.56675452, 0.58227891, 
@@ -341,7 +366,7 @@
     trainerLevel: document.getElementById('trainerLevel')
   };
 
-  // --- LOCAL STORAGE: TRAINER LEVEL ---
+  // Local Storage for Trainer Level
   if (localStorage.getItem('savedTrainerLevel')) {
     ui.trainerLevel.value = localStorage.getItem('savedTrainerLevel');
   }
@@ -358,24 +383,30 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
-      // Strict Form Whitelist (Removes all costumes automatically)
-      const allowedForms = [
-        'normal', 'alola', 'galar', 'hisui', 'paldea', 'mega', 'primal', 'shadow',
-        'origin', 'therian', 'incarnate', 'zen', 'attack', 'defense', 'speed', 
-        'plant', 'sandy', 'trash', 'sunny', 'rainy', 'snowy', 'baile', 'pom-pom', 
-        'pau', 'sensu', 'midday', 'midnight', 'dusk', 'dawn', 'complete', '10%', 
-        '50%', 'hero', 'resolute', 'pirouette', 'aria', 'blade', 'shield', 'rapid', 
-        'single', 'roaming', 'chest', 'white', 'black', 'bloodmoon', 'build', 
-        'family', 'droopy', 'stretchy', 'ordinary', 'artisan', 'altered', 'armored',
-        'east', 'west', 'wash', 'heat', 'fan', 'mow', 'frost', 'burn', 'chill', 'douse', 'shock'
+      // Strict Form Whitelist + Edge Case Blacklist
+      const validForms = [
+        'alola', 'galar', 'hisui', 'paldea', 'mega', 'primal', 'shadow',
+        'attack', 'defense', 'speed', 'altered', 'origin', 'therian', 'incarnate', 
+        'zen', 'baile', 'pom-pom', 'pau', 'sensu', 'midday', 'midnight', 'dusk', 'dawn', 
+        '10%', '50%', 'complete', 'blade', 'shield', 'hero', 'resolute', 'pirouette', 'aria', 
+        'roaming', 'chest', 'droopy', 'stretchy', 'curly', 'average', 'small', 'large', 'super', 
+        'single', 'rapid', 'rider', 'crowned', 'segment', 'core', 'meteor', 'wash', 'heat', 
+        'fan', 'mow', 'frost', 'burn', 'chill', 'douse', 'shock', 'plant', 'sandy', 'trash', 
+        'sunny', 'rainy', 'snowy', 'overcast', 'cherrim', 'standard', 'black', 'white'
       ];
 
       stats.forEach(p => {
         let name = p.pokemon_name;
         if (p.form && p.form !== 'Normal') {
           let fLow = p.form.toLowerCase();
-          let isAllowed = allowedForms.some(allowed => fLow.includes(allowed));
-          if (!isAllowed) return; // Strict skip
+          
+          let isValid = validForms.some(v => fLow.includes(v));
+          let isCostume = /costume|hat|cap|crown|flower|party|holiday|event|fest|safari|anniversary|world|championship|libre|star|trick|treat|spooky|mischief|ribbon|balloon|glasses|wwe|phd|crash|lucha|201\d|202\d|203\d/i.test(fLow);
+          
+          if (fLow.includes('crowned')) isCostume = false; 
+
+          if (!isValid || isCostume) return; 
+          
           name = `${p.pokemon_name} (${p.form})`;
         }
         pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
@@ -397,7 +428,7 @@
     }
   }
 
-  // --- MODE TOGGLER ---
+  // --- UI TOGGLING ---
   window.setMode = function(mode) {
     isCaughtMode = (mode === 'caught');
     document.getElementById('btn-wild').classList.toggle('active', !isCaughtMode);
@@ -407,11 +438,9 @@
     document.getElementById('caught-inputs').style.display = isCaughtMode ? 'block' : 'none';
     
     document.getElementById('card-possibilities').style.display = isCaughtMode ? 'none' : 'flex';
-    
     calculateMatches();
   };
 
-  // --- AUTOCOMPLETE ---
   window.selectPokemon = function(name) {
     ui.poke.value = name;
     ui.list.innerHTML = '';
@@ -422,9 +451,7 @@
     let val = this.value;
     ui.list.innerHTML = ''; 
     if (!val) return;
-    
     let matches = pokemonNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
-    
     matches.forEach(name => {
       let item = document.createElement("div");
       let regex = new RegExp(`(${val})`, "gi");
@@ -459,7 +486,7 @@
     calculateMatches();
   });
 
-  // --- MATH FUNCTIONS ---
+  // --- MATH ---
   function calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
     let atk = parseInt(baseAtk) + ivA;
     let def = parseInt(baseDef) + ivD;
@@ -532,7 +559,7 @@
     return [...new Set(finals)].filter(f => pokeData[f]);
   }
 
-  // --- RENDER HELPERS ---
+  // --- RENDERING ---
   function makeLeagueCard(leagueName, bestObserved, rank1) {
     if (!bestObserved || bestObserved.sp === 0) {
       return `
@@ -619,14 +646,13 @@
       return;
     }
 
-    let slackText = ui.slack.value === 'all' ? '(All)' : `(±${ui.slack.value})`;
+    let slackText = ui.slack.value === 'all' ? '(All Levels)' : `(±${ui.slack.value})`;
     let htmlOut = `<div style="margin-bottom:8px; font-size:11px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
         <span>${currentMatches.length} MATCHES ${slackText}</span>
         <span style="font-style:italic; font-weight:normal;">Tap to isolate</span>
     </div>`;
     
-    htmlOut += `<div class="scrollable-matches"><div class="iv-grid">`;
-    
+    htmlOut += `<div class="iv-grid">`;
     currentMatches.forEach(m => {
       let isPerfect = m.total === "100.0" ? "perfect-iv" : "";
       let isSelected = (selectedMatch && selectedMatch.id === m.id) ? "selected-row" : "";
@@ -638,7 +664,7 @@
         </div>
       `;
     });
-    htmlOut += `</div></div>`;
+    htmlOut += `</div>`;
     ui.results.innerHTML = htmlOut;
   }
 
@@ -677,7 +703,7 @@
       <div class="league-grid">${lcCard}${glCard}${ulCard}${mlCard}</div>
     `;
 
-    // --- SIMULATED EVOLUTION PROJECTION ---
+    // Projected Evolutions
     let finals = getFinalEvolutions(name).slice(0, 2); 
     finals.forEach(fName => {
       let fData = pokeData[fName];
@@ -710,7 +736,6 @@
     ui.pvpBody.innerHTML = finalHtml;
   }
 
-  // --- SELECTION & CALCULATION ---
   window.selectMatch = function(id) {
     if (selectedMatch && selectedMatch.id === id) {
       selectedMatch = null; 
@@ -737,7 +762,6 @@
     renderPVE(name, data);
     currentMatches = [];
 
-    // ALREADY CAUGHT MODE LOGIC
     if (isCaughtMode) {
       let l = parseFloat(ui.cLevel.value) || 1;
       let a = parseInt(ui.cAtk.value) || 0;
@@ -755,7 +779,6 @@
       return; 
     }
 
-    // WILD ENCOUNTER LOGIC
     let cpInput = parseInt(ui.cp.value);
     let baseLevel = parseInt(ui.slider.value);
     let slackVal = ui.slack.value;
@@ -768,7 +791,6 @@
     }
 
     let minIV = isWeather ? 4 : 0;
-    
     let minLvl = 1;
     let maxLvl = 50;
     
