@@ -30,162 +30,146 @@
   .top-header {
     background: linear-gradient(90deg, var(--primary-blue), var(--header-blue));
     color: white;
-    padding: 15px 30px;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   }
-  .header-left h1 { margin: 0; font-size: 20px; display: flex; align-items: center; }
-  .header-left span.subtitle { font-size: 11px; color: var(--accent-yellow); letter-spacing: 1px; text-transform: uppercase; display: block; margin-top: 4px; font-weight: 600;}
+  .header-left h1 { margin: 0; font-size: 18px; display: flex; align-items: center; }
+  .version-badge { font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 6px; margin-left: 8px; }
   .header-right { display: flex; gap: 10px; align-items: center; }
-  .trainer-lvl { background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 6px; font-size: 14px; display: flex; align-items: center; gap: 10px;}
-  .trainer-lvl input { background: transparent; border: none; color: white; width: 30px; font-weight: bold; font-size: 14px; outline: none;}
+  .trainer-lvl { background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 6px; font-weight: 600;}
+  .trainer-lvl input { background: transparent; border: none; color: white; width: 24px; font-weight: bold; font-size: 13px; outline: none; text-align: center;}
 
   /* --- LAYOUT --- */
   .dashboard {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr; /* 3 Columns to show everything at once */
-    gap: 20px;
-    padding: 30px;
-    max-width: 1500px;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 15px;
+    padding: 20px;
+    max-width: 1400px;
     margin: 0 auto;
     align-items: start;
-  }
-  @media (max-width: 1100px) {
-    .dashboard { grid-template-columns: 1fr 1fr; }
-    .col-right { grid-column: span 2; }
-  }
-  @media (max-width: 768px) {
-    .dashboard { grid-template-columns: 1fr; padding: 15px; }
-    .col-right { grid-column: span 1; }
-    .top-header { flex-direction: column; gap: 15px; align-items: flex-start; }
   }
 
   /* --- CARDS & TABS --- */
   .card {
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--border-light);
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 15px;
+    margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   }
   .card-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--primary-blue);
-    text-transform: uppercase;
-    margin-bottom: 15px;
-    letter-spacing: 0.5px;
+    font-size: 12px; font-weight: 700; color: var(--primary-blue);
+    text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;
   }
-  .input-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .input-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
 
-  .tabs { display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 20px; border: 1px solid var(--border-light); }
-  .tab { flex: 1; text-align: center; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-muted); transition: 0.2s; border: none; background: transparent; }
+  .tabs { display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 15px; border: 1px solid var(--border-light); }
+  .tab { flex: 1; text-align: center; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-muted); border: none; background: transparent; }
   .tab.active { background: white; color: var(--primary-blue); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
   /* --- INPUTS --- */
   input[type="text"], input[type="number"].box-input, select.box-input {
-    width: 100%; padding: 12px 15px; border: 1px solid var(--border-light); border-radius: 8px;
-    box-sizing: border-box; font-size: 15px; background: #f9fafb; outline: none; transition: 0.2s;
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border-light); border-radius: 6px;
+    box-sizing: border-box; font-size: 14px; background: #f9fafb; outline: none; transition: 0.2s;
   }
   input[type="text"]:focus, input[type="number"].box-input:focus, select.box-input:focus { border-color: var(--primary-blue); background: #fff; }
+  
+  /* Extremely Compact Mobile Inputs */
+  .input-group-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .cp-input-wrap { flex: 1; }
+  .weather-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9fafb; border: 1px solid var(--border-light); border-radius: 6px; padding: 0 12px; }
 
   /* --- AUTOCOMPLETE --- */
   .autocomplete-container { position: relative; width: 100%; }
   .autocomplete-items {
-    position: absolute; border: 1px solid var(--border-light); border-radius: 8px; z-index: 99; top: 100%; left: 0; right: 0;
+    position: absolute; border: 1px solid var(--border-light); border-radius: 6px; z-index: 99; top: 100%; left: 0; right: 0;
     max-height: 200px; overflow-y: auto; background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 5px;
   }
-  .autocomplete-items div { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+  .autocomplete-items div { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
   .autocomplete-items div:active, .autocomplete-items div:hover { background-color: #f3f4f6; }
   .autocomplete-items strong { color: var(--primary-blue); }
 
   /* --- INTERNAL RELATED LINKS --- */
-  .related-container { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
-  .related-tag {
-    background: #f3f4f6; color: var(--text-muted); padding: 4px 10px; border-radius: 12px;
-    font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; border: 1px solid var(--border-light);
-  }
-  .related-tag:hover { background: var(--border-light); color: var(--text-main); }
+  .related-container { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .related-tag { background: #f3f4f6; color: var(--text-muted); padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer; border: 1px solid var(--border-light); }
   .related-tag.tag-evo { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
-  .related-tag.tag-evo:hover { background: #3730a3; color: white; }
   .related-tag.tag-form { background: #fffbeb; color: #b45309; border-color: #fde68a; }
-  .related-tag.tag-form:hover { background: #b45309; color: white; }
-  
-  details.forms-collapse { margin-top: 10px; font-size: 12px; }
-  details.forms-collapse summary { cursor: pointer; color: var(--primary-blue); font-weight: 600; user-select: none; outline: none; padding: 4px 0; }
-  details.forms-collapse summary:hover { text-decoration: underline; }
-  .forms-tag-container { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-
-  /* --- OBSERVED CP --- */
-  .cp-input-container { background: var(--cp-bg); border: 1px solid var(--border-light); border-radius: 8px; padding: 10px; text-align: center; }
-  .cp-input-container input { background: transparent; border: none; font-size: 42px; font-weight: 700; color: var(--cp-text); text-align: center; width: 100%; outline: none; }
-  .cp-input-container input::placeholder { color: #d1d5db; font-size: 24px; vertical-align: middle; }
+  details.forms-collapse { margin-top: 8px; font-size: 11px; }
+  details.forms-collapse summary { cursor: pointer; color: var(--primary-blue); font-weight: 600; outline: none; }
+  .forms-tag-container { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
 
   /* --- WEATHER TOGGLE --- */
-  .weather-row { display: flex; justify-content: space-between; align-items: center; }
-  .weather-info strong { display: block; font-size: 14px; margin-bottom: 4px; }
-  .weather-info span { font-size: 11px; color: var(--text-muted); }
-  
-  .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
   .switch input { opacity: 0; width: 0; height: 0; }
-  .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-  .slider-toggle:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-  input:checked + .slider-toggle { background-color: #3c52b2; }
-  input:checked + .slider-toggle:before { transform: translateX(20px); }
+  .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+  .slider-toggle:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+  input:checked + .slider-toggle { background-color: var(--primary-blue); }
+  input:checked + .slider-toggle:before { transform: translateX(16px); }
 
   /* --- CATCH CIRCLE SLIDER --- */
-  .slider-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-  .level-badge { border: 2px solid var(--primary-blue); color: var(--primary-blue); padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; background: #f4f6fc; }
+  .slider-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .level-badge { border: 1px solid var(--primary-blue); color: var(--primary-blue); padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; background: #f4f6fc; }
   
-  .range-container { margin-top: 10px; }
+  .range-container { margin-top: 8px; }
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
   input[type=range]:focus { outline: none; }
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, hsl(120, 100%, 50%), hsl(60, 100%, 50%), hsl(0, 100%, 50%)); border-radius: 4px; }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
-    background: var(--thumb-color, #ffeb3b); border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    cursor: pointer; margin-top: -8px; transition: background 0.1s;
-  }
-  .slider-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted); font-weight: 600; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: var(--thumb-color, #ffeb3b); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer; margin-top: -7px; }
+  .slider-labels { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-muted); font-weight: 600; }
 
-  /* --- RIGHT COLUMN SECTIONS --- */
-  .placeholder-text { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 20px; }
+  /* --- TABLES & RESULTS --- */
+  .placeholder-text { color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px; }
   
-  .results-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
-  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; padding: 10px 0; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: white; z-index: 2;}
-  .results-table td { padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+  .results-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 10px; padding: 8px 2px; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: white; z-index: 2;}
+  .results-table td { padding: 8px 2px; border-bottom: 1px solid #f3f4f6; }
   .results-table tr:last-child td { border-bottom: none; }
+  
+  .compact-pve-bar { display: flex; justify-content: space-between; align-items: center; background: #f4f6fc; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; }
 
-  .evo-header { background: #f9fafb; font-size: 11px; text-transform: uppercase; color: var(--primary-blue); font-weight: 700; text-align: center; padding: 8px 0; border-top: 2px solid var(--border-light); letter-spacing: 0.5px; }
-  .stat-pill { background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
+  .evo-header { background: #f9fafb; font-size: 10px; text-transform: uppercase; color: var(--primary-blue); font-weight: 700; padding: 6px 0; border-top: 2px solid var(--border-light); }
   .perfect-iv { color: #d97706; font-weight: bold; }
   
-  .scrollable-matches { max-height: calc(100vh - 200px); min-height: 350px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 8px; background: #ffffff; }
-  .match-row { cursor: pointer; transition: background 0.15s; }
+  /* Dynamic height for matches to prevent infinite scrolling */
+  .scrollable-matches { max-height: calc(100vh - 200px); overflow-y: auto; border: 1px solid var(--border-light); border-radius: 6px; background: #ffffff; }
+  .match-row { cursor: pointer; transition: background 0.1s; }
   .match-row:hover { background-color: #f9fafb; }
   .selected-row { background-color: #e0e7ff !important; box-shadow: inset 4px 0 0 #3730a3; }
+
+  /* --- MOBILE RESPONSIVENESS --- */
+  @media (max-width: 1024px) {
+    .dashboard { grid-template-columns: 1fr 1fr; }
+    .col-right { grid-column: span 2; }
+    .scrollable-matches { max-height: 35vh; } /* Keeps it small on tablets */
+  }
+  @media (max-width: 768px) {
+    .dashboard { grid-template-columns: 1fr; padding: 10px; gap: 10px; }
+    .col-right { grid-column: span 1; }
+    .card { padding: 12px; margin-bottom: 0; }
+    .top-header { padding: 10px; }
+    .scrollable-matches { max-height: 35vh; } /* Max height relative to screen size to prevent endless scrolling */
+    
+    /* Super compact Exact Stats on mobile */
+    .exact-stats-grid { display: flex !important; gap: 6px !important; }
+    .exact-stats-grid > div { flex: 1; }
+    .exact-stats-grid input { padding: 8px 4px; text-align: center; }
+  }
 </style>
 </head>
 <body>
 
 <div class="top-header">
   <div class="header-left">
-    <h1>
-      Wild IV Evaluator
-      <span style="font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 3px 6px; border-radius: 6px; margin-left: 8px; letter-spacing: 0; display: inline-block; vertical-align: middle;">v1.2</span>
-    </h1>
-    <span class="subtitle">Field Researcher Tools</span>
+    <h1>Wild IV Evaluator <span class="version-badge">v1.3</span></h1>
   </div>
   <div class="header-right">
     <div class="trainer-lvl">
-      Trainer Lvl
-      <input type="number" id="trainerLevel" value="50" max="80" min="1">
+      Tr. Lvl <input type="number" id="trainerLevel" value="50" max="80" min="1">
     </div>
   </div>
 </div>
@@ -199,30 +183,28 @@
       <button id="btn-caught" class="tab" onclick="setMode('caught')">Already Caught</button>
     </div>
 
+    <!-- Search Card -->
     <div class="card">
-      <div class="card-header">Identify Target</div>
+      <div class="card-header">Target Identification</div>
       <div class="autocomplete-container">
-        <input type="text" id="pokemon" placeholder="e.g. Pawmi, Skeledirge, Lunatone..." autocomplete="off">
+        <input type="text" id="pokemon" placeholder="e.g. Pawmi, Skeledirge..." autocomplete="off">
         <div id="autocomplete-list" class="autocomplete-items"></div>
       </div>
       <div id="related-pokemon"></div>
     </div>
 
     <!-- Inputs for WILD ENCOUNTER mode -->
-    <div id="wild-inputs">
-      <div class="card">
-        <div class="card-header">Observed CP</div>
-        <div class="cp-input-container">
-          <input type="number" id="cp" placeholder="10">
+    <div id="wild-inputs" class="card">
+      <div class="card-header">Encounter Details</div>
+      
+      <!-- Compact Grid for CP & Weather -->
+      <div class="input-group-row">
+        <div class="cp-input-wrap">
+          <label class="input-label">Observed CP</label>
+          <input type="number" class="box-input" id="cp" placeholder="e.g. 10" style="font-size: 18px; font-weight: bold; text-align: center;">
         </div>
-      </div>
-
-      <div class="card">
-        <div class="weather-row">
-          <div class="weather-info">
-            <strong>Weather Boost</strong>
-            <span>Increases level & IV floor</span>
-          </div>
+        <div class="weather-wrap">
+          <label class="input-label">Weather</label>
           <label class="switch">
             <input type="checkbox" id="weather">
             <span class="slider-toggle"></span>
@@ -230,80 +212,79 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="slider-header-row" style="margin-bottom: 5px;">
-          <div class="card-header" style="margin:0;">Catch Circle Color</div>
-          <div class="level-badge" id="levelDisplay">Lvl 15 (±2)</div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <label style="font-size: 11px; font-weight: bold; color: var(--text-muted);">SLIDER SLACK</label>
-          <select id="levelSlack" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-light); font-size: 12px; background: #fff; cursor: pointer;">
-            <option value="0">Exact Level (±0)</option>
-            <option value="1">Tight (±1)</option>
-            <option value="2" selected>Normal (±2)</option>
-            <option value="3">Loose (±3)</option>
-            <option value="all">Show All Levels</option>
+      <!-- Compact Slider Section -->
+      <div class="slider-header-row">
+        <label class="input-label" style="margin:0;">Ring Color</label>
+        <div style="display:flex; gap: 8px; align-items:center;">
+          <select id="levelSlack" class="box-input" style="padding: 2px 4px; font-size: 10px; width: auto; height: 22px;">
+            <option value="0">±0 (Exact)</option>
+            <option value="1">±1 (Tight)</option>
+            <option value="2" selected>±2 (Normal)</option>
+            <option value="3">±3 (Loose)</option>
+            <option value="all">Scan All (1-50)</option>
           </select>
+          <div class="level-badge" id="levelDisplay">Lvl 15</div>
         </div>
-        <div class="range-container">
-          <input type="range" id="levelSlider" min="1" max="50" value="15">
-          <div class="slider-labels">
-            <span>Easy (Lvl 1)</span>
-            <span>Hard (Lvl 50)</span>
-          </div>
+      </div>
+      <div class="range-container">
+        <input type="range" id="levelSlider" min="1" max="50" value="15">
+        <div class="slider-labels">
+          <span>Green (1)</span>
+          <span>Red (50)</span>
         </div>
       </div>
     </div>
 
     <!-- Inputs for ALREADY CAUGHT mode -->
-    <div id="caught-inputs" style="display: none;">
-      <div class="card">
-        <div class="card-header">Exact Stats</div>
-        
-        <label class="input-label">Current Level (1-50)</label>
-        <input type="number" class="box-input" id="caught-level" min="1" max="50" step="0.5" value="15">
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px;">
-          <div>
-            <label class="input-label">Attack</label>
-            <input type="number" class="box-input" id="caught-atk" min="0" max="15" value="15">
-          </div>
-          <div>
-            <label class="input-label">Defense</label>
-            <input type="number" class="box-input" id="caught-def" min="0" max="15" value="15">
-          </div>
-          <div>
-            <label class="input-label">Stamina</label>
-            <input type="number" class="box-input" id="caught-sta" min="0" max="15" value="15">
-          </div>
+    <div id="caught-inputs" class="card" style="display: none;">
+      <div class="card-header">Exact Stats</div>
+      
+      <!-- Compact 4-Column Grid for Mobile -->
+      <div class="exact-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;">
+        <div>
+          <label class="input-label">Lvl</label>
+          <input type="number" class="box-input" id="caught-level" min="1" max="50" step="0.5" value="15" style="text-align:center;">
+        </div>
+        <div>
+          <label class="input-label">Atk</label>
+          <input type="number" class="box-input" id="caught-atk" min="0" max="15" value="15" style="text-align:center;">
+        </div>
+        <div>
+          <label class="input-label">Def</label>
+          <input type="number" class="box-input" id="caught-def" min="0" max="15" value="15" style="text-align:center;">
+        </div>
+        <div>
+          <label class="input-label">Sta</label>
+          <input type="number" class="box-input" id="caught-sta" min="0" max="15" value="15" style="text-align:center;">
         </div>
       </div>
     </div>
   </div>
 
-  <!-- COLUMN 2: PVE & PVP RANKINGS -->
+  <!-- COLUMN 2: ANALYSIS (PvE + PvP Combined) -->
   <div class="col-middle">
     <div class="card">
-      <div class="card-header">PVE Base Stat Assessment</div>
-      <div id="pve-results" style="font-size: 15px; color: var(--text-main);">
-        Select a Pokémon to view its base strength for Gyms & Raids.
+      <div class="card-header">Analysis & Rankings</div>
+      
+      <!-- Compact PvE Bar -->
+      <div id="pve-results">
+        <div class="compact-pve-bar" style="justify-content: center; color: var(--text-muted);">
+          Select a Pokémon to view PvE base stats.
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="card-header">Best Possible Rankings</div>
       <table class="results-table">
         <thead>
           <tr>
-            <th>Format</th>
-            <th>% of Max</th>
+            <th>League</th>
+            <th>Max %</th>
             <th>Best IVs</th>
-            <th>Level</th>
-            <th>Stat Product</th>
+            <th>Lvl</th>
+            <th>Stat Prod</th>
           </tr>
         </thead>
         <tbody id="pvp-results-body">
-          <tr><td colspan="5" class="placeholder-text" style="padding: 20px;">Awaiting Pokémon selection...</td></tr>
+          <tr><td colspan="5" class="placeholder-text">Awaiting input...</td></tr>
         </tbody>
       </table>
     </div>
@@ -311,12 +292,10 @@
 
   <!-- COLUMN 3: POSSIBILITIES -->
   <div class="col-right">
-    <div class="card" id="card-possibilities" style="height: 100%; box-sizing: border-box;">
-      <div class="card-header">IV Probability Match</div>
-      <div id="results">
-        <div class="placeholder-text">
-          Enter CP to evaluate possibilities...
-        </div>
+    <div class="card" id="card-possibilities" style="display:flex; flex-direction:column; height: 100%; box-sizing: border-box;">
+      <div class="card-header">IV Probabilities</div>
+      <div id="results" style="flex: 1;">
+        <div class="placeholder-text">Enter CP to evaluate...</div>
       </div>
     </div>
   </div>
@@ -364,26 +343,21 @@
     pveResults: document.getElementById('pve-results'),
     pvpBody: document.getElementById('pvp-results-body'),
     
-    // Caught Mode Inputs
     cLevel: document.getElementById('caught-level'),
     cAtk: document.getElementById('caught-atk'),
     cDef: document.getElementById('caught-def'),
     cSta: document.getElementById('caught-sta'),
-    
+
     trainerLevel: document.getElementById('trainerLevel')
   };
-  
-    // --- LOCAL STORAGE: TRAINER LEVEL ---
-  // 1. Check if there's a saved level and apply it on load
+
+  // --- LOCAL STORAGE: TRAINER LEVEL ---
   if (localStorage.getItem('savedTrainerLevel')) {
     ui.trainerLevel.value = localStorage.getItem('savedTrainerLevel');
   }
-
-  // 2. Listen for changes and save them immediately
   ui.trainerLevel.addEventListener('input', function() {
     localStorage.setItem('savedTrainerLevel', this.value);
   });
-
 
   async function loadData() {
     try {
@@ -394,7 +368,6 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
-      // Expanded junk form blacklist to strictly remove costumes/events
       const junkForms = [
         'purified', 'costume', 'hat', 'crown', 'flower', '2019', '2020', '2021', '2022', '2023', '2024', 
         'clone', 'libre', 'star', 'holiday', 'event', 'anniversary', 'winter', 'summer', 'fall', 'spring', 
@@ -408,7 +381,7 @@
         let name = p.pokemon_name;
         if (p.form && p.form !== 'Normal') {
           let fLow = p.form.toLowerCase();
-          if (junkForms.some(w => fLow.includes(w))) return; // Aggressive filtering
+          if (junkForms.some(w => fLow.includes(w))) return; 
           name = `${p.pokemon_name} (${p.form})`;
         }
         pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
@@ -439,7 +412,7 @@
     document.getElementById('wild-inputs').style.display = isCaughtMode ? 'none' : 'block';
     document.getElementById('caught-inputs').style.display = isCaughtMode ? 'block' : 'none';
     
-    document.getElementById('card-possibilities').style.display = isCaughtMode ? 'none' : 'block';
+    document.getElementById('card-possibilities').style.display = isCaughtMode ? 'none' : 'flex';
     
     calculateMatches();
   };
@@ -474,10 +447,7 @@
 
   function updateSliderVisuals() {
     let level = parseInt(ui.slider.value);
-    let slackVal = ui.slack.value;
-    let slackText = slackVal === 'all' ? '(All)' : `(±${slackVal})`;
-    
-    ui.levelDisp.innerText = `Lvl ${level} ${slackText}`;
+    ui.levelDisp.innerText = `Lvl ${level}`;
     let hue = 120 - ((level - 1) / 49) * 120;
     ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
   }
@@ -569,8 +539,8 @@
   function makeRowRank1(leagueName, rank1) {
     return `<tr>
       <td><strong>${leagueName}</strong></td>
-      <td class="perfect-iv"><strong>100.00%</strong></td>
-      <td>${rank1.a} / ${rank1.d} / ${rank1.s}</td>
+      <td class="perfect-iv"><strong>100%</strong></td>
+      <td>${rank1.a}/${rank1.d}/${rank1.s}</td>
       <td>${rank1.level}</td>
       <td>${rank1.sp.toLocaleString()}</td>
     </tr>`;
@@ -580,15 +550,15 @@
     if (bestObserved.sp === 0) {
       return `<tr>
         <td><strong>${leagueName}</strong></td>
-        <td colspan="4" style="color: var(--text-muted); font-size: 12px; font-style: italic;">N/A (Current CP/Level exceeds cap)</td>
+        <td colspan="4" style="color: var(--text-muted); font-size: 10px; font-style: italic;">Exceeds CP Cap</td>
       </tr>`;
     }
-    let pct = ((bestObserved.sp / rank1.sp) * 100).toFixed(2);
-    let isPerfect = pct === "100.00" ? "perfect-iv" : "";
+    let pct = ((bestObserved.sp / rank1.sp) * 100).toFixed(1);
+    let isPerfect = pct === "100.0" ? "perfect-iv" : "";
     return `<tr>
       <td><strong>${leagueName}</strong></td>
       <td class="${isPerfect}"><strong>${pct}%</strong></td>
-      <td>${bestObserved.iv.a} / ${bestObserved.iv.d} / ${bestObserved.iv.s}</td>
+      <td>${bestObserved.iv.a}/${bestObserved.iv.d}/${bestObserved.iv.s}</td>
       <td>${bestObserved.level}</td>
       <td>${bestObserved.sp.toLocaleString()}</td>
     </tr>`;
@@ -625,24 +595,15 @@
     ui.related.innerHTML = fullRelatedHtml;
 
     let pveEval = "";
-    if (data.atk >= 250) pveEval = "<span style='color: #15803d; font-weight: bold;'>Top-Tier Raid Attacker</span>";
-    else if (data.atk >= 200) pveEval = "<span style='color: #0369a1; font-weight: bold;'>Strong Raid Attacker</span>";
+    if (data.atk >= 250) pveEval = "<span style='color: #15803d; font-weight: bold;'>Top-Tier Attacker</span>";
+    else if (data.atk >= 200) pveEval = "<span style='color: #0369a1; font-weight: bold;'>Strong Attacker</span>";
     else if (data.atk >= 150) pveEval = "<span style='color: #b45309; font-weight: bold;'>Average Attacker</span>";
-    else pveEval = "<span style='color: #be123c; font-weight: bold;'>Not recommended for PVE</span>";
+    else pveEval = "<span style='color: #be123c; font-weight: bold;'>Not Recommended</span>";
 
     ui.pveResults.innerHTML = `
-      <div style="display: flex; gap: 15px; margin-top: 5px; margin-bottom: 15px;">
-        <div><strong>Attack:</strong> <span class="stat-pill">${data.atk}</span></div>
-        <div><strong>Defense:</strong> <span class="stat-pill">${data.def}</span></div>
-        <div><strong>Stamina:</strong> <span class="stat-pill">${data.sta}</span></div>
-      </div>
-      <div style="font-size: 14px; margin-bottom: 15px;">
-        <strong>PVE Viability:</strong> ${pveEval}
-      </div>
-      <div style="border-top: 1px solid var(--border-light); padding-top: 12px; margin-top: 12px;">
-        <a href="https://db.pokemongohub.net/pokemon/${data.id}" target="_blank" style="color: var(--primary-blue); font-weight: 600; text-decoration: none; font-size: 13px;">
-          View Detailed Database on Go Hub &rarr;
-        </a>
+      <div class="compact-pve-bar">
+        <div><strong>A:</strong> ${data.atk} | <strong>D:</strong> ${data.def} | <strong>S:</strong> ${data.sta}</div>
+        <div>${pveEval} <a href="https://db.pokemongohub.net/pokemon/${data.id}" target="_blank" style="margin-left: 4px; color: var(--primary-blue); text-decoration: none;">&rarr;</a></div>
       </div>
     `;
   }
@@ -664,23 +625,23 @@
       return;
     }
 
-    let slackText = ui.slack.value === 'all' ? '(All)' : `(±${ui.slack.value})`;
-    let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
-        <span>${currentMatches.length} POSSIBILITIES ${slackText}</span>
-        <span style="font-style:italic; font-weight:normal;">Click a row to isolate</span>
+    let slackText = ui.slack.value === 'all' ? '(All Levels)' : `(±${ui.slack.value})`;
+    let htmlOut = `<div style="margin-bottom:8px; font-size:11px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
+        <span>${currentMatches.length} MATCHES ${slackText}</span>
+        <span style="font-style:italic; font-weight:normal;">Tap to isolate</span>
     </div>`;
     
     htmlOut += `<div class="scrollable-matches"><table class="results-table" style="margin: 0;">`;
-    htmlOut += `<thead><tr><th style="padding-left:10px;">Lvl</th><th>IVs (A/D/S)</th><th style="padding-right:10px;">% Perfect</th></tr></thead><tbody>`;
+    htmlOut += `<thead><tr><th>Lvl</th><th>IVs (A/D/S)</th><th>% Perfect</th></tr></thead><tbody>`;
     
     currentMatches.forEach(m => {
       let isPerfect = m.total === "100.0" ? "perfect-iv" : "";
       let isSelected = (selectedMatch && selectedMatch.id === m.id) ? "selected-row" : "";
       htmlOut += `
         <tr class="match-row ${isSelected} ${isPerfect}" data-id="${m.id}" onclick="selectMatch('${m.id}')">
-          <td style="padding-left: 10px;"><strong>${m.level}</strong></td>
-          <td>${m.a} / ${m.d} / ${m.s}</td>
-          <td style="padding-right: 10px;"><strong>${m.total}%</strong></td>
+          <td><strong>${m.level}</strong></td>
+          <td>${m.a}/${m.d}/${m.s}</td>
+          <td><strong>${m.total}%</strong></td>
         </tr>
       `;
     });
@@ -712,10 +673,10 @@
        if (ml.sp > bestML.sp) bestML = { iv: m, ...ml };
     });
 
-    let lcRow = ranks.LC.sp > 0 ? makeRowObserved("Little Cup", bestLC, ranks.LC) : "";
-    let glRow = ranks.GL.sp > 0 ? makeRowObserved("Great League", bestGL, ranks.GL) : "";
-    let ulRow = ranks.UL.sp > 0 ? makeRowObserved("Ultra League", bestUL, ranks.UL) : "";
-    let mlRow = makeRowObserved("Master League", bestML, ranks.ML);
+    let lcRow = ranks.LC.sp > 0 ? makeRowObserved("Little", bestLC, ranks.LC) : "";
+    let glRow = ranks.GL.sp > 0 ? makeRowObserved("Great", bestGL, ranks.GL) : "";
+    let ulRow = ranks.UL.sp > 0 ? makeRowObserved("Ultra", bestUL, ranks.UL) : "";
+    let mlRow = makeRowObserved("Master", bestML, ranks.ML);
     
     let finalHtml = lcRow + glRow + ulRow + mlRow;
 
@@ -739,9 +700,9 @@
         if (ml.sp > bestF_ML.sp) bestF_ML = { iv: m, ...ml };
       });
 
-      let e_glRow = fRanks.GL.sp > 0 ? makeRowObserved("Great League", bestF_GL, fRanks.GL) : "";
-      let e_ulRow = fRanks.UL.sp > 0 ? makeRowObserved("Ultra League", bestF_UL, fRanks.UL) : "";
-      let e_mlRow = makeRowObserved("Master League", bestF_ML, fRanks.ML);
+      let e_glRow = fRanks.GL.sp > 0 ? makeRowObserved("Great", bestF_GL, fRanks.GL) : "";
+      let e_ulRow = fRanks.UL.sp > 0 ? makeRowObserved("Ultra", bestF_UL, fRanks.UL) : "";
+      let e_mlRow = makeRowObserved("Master", bestF_ML, fRanks.ML);
       
       if (e_glRow || e_ulRow || e_mlRow) {
         finalHtml += `<tr><td colspan="5" class="evo-header">If Evolved to ${fName}</td></tr>`;
