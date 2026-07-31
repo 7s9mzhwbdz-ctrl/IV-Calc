@@ -36,8 +36,8 @@
     align-items: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   }
-  .header-left h1 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
-  .header-left span { font-size: 11px; color: var(--accent-yellow); letter-spacing: 1px; text-transform: uppercase; display: block; margin-top: 4px; font-weight: 600;}
+  .header-left h1 { margin: 0; font-size: 20px; display: flex; align-items: center; }
+  .header-left span.subtitle { font-size: 11px; color: var(--accent-yellow); letter-spacing: 1px; text-transform: uppercase; display: block; margin-top: 4px; font-weight: 600;}
   .header-right { display: flex; gap: 10px; align-items: center; }
   .trainer-lvl { background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 6px; font-size: 14px; display: flex; align-items: center; gap: 10px;}
   .trainer-lvl input { background: transparent; border: none; color: white; width: 30px; font-weight: bold; font-size: 14px; outline: none;}
@@ -45,14 +45,20 @@
   /* --- LAYOUT --- */
   .dashboard {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 1fr 1fr; /* 3 Columns to show everything at once */
     gap: 20px;
     padding: 30px;
-    max-width: 1200px;
+    max-width: 1500px;
     margin: 0 auto;
+    align-items: start;
+  }
+  @media (max-width: 1100px) {
+    .dashboard { grid-template-columns: 1fr 1fr; }
+    .col-right { grid-column: span 2; }
   }
   @media (max-width: 768px) {
     .dashboard { grid-template-columns: 1fr; padding: 15px; }
+    .col-right { grid-column: span 1; }
     .top-header { flex-direction: column; gap: 15px; align-items: flex-start; }
   }
 
@@ -83,11 +89,11 @@
   .tab.active { background: white; color: var(--primary-blue); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
   /* --- INPUTS --- */
-  input[type="text"], input[type="number"].box-input {
+  input[type="text"], input[type="number"].box-input, select.box-input {
     width: 100%; padding: 12px 15px; border: 1px solid var(--border-light); border-radius: 8px;
     box-sizing: border-box; font-size: 15px; background: #f9fafb; outline: none; transition: 0.2s;
   }
-  input[type="text"]:focus, input[type="number"].box-input:focus { border-color: var(--primary-blue); background: #fff; }
+  input[type="text"]:focus, input[type="number"].box-input:focus, select.box-input:focus { border-color: var(--primary-blue); background: #fff; }
 
   /* --- AUTOCOMPLETE --- */
   .autocomplete-container { position: relative; width: 100%; }
@@ -140,7 +146,6 @@
   .range-container { margin-top: 10px; }
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
   input[type=range]:focus { outline: none; }
-  /* Updated to pure HSL values to perfectly match the JS thumb color calculations */
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, hsl(120, 100%, 50%), hsl(60, 100%, 50%), hsl(0, 100%, 50%)); border-radius: 4px; }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
@@ -153,7 +158,7 @@
   .placeholder-text { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 20px; }
   
   .results-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
-  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; padding: 10px 0; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: white;}
+  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; padding: 10px 0; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: white; z-index: 2;}
   .results-table td { padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
   .results-table tr:last-child td { border-bottom: none; }
 
@@ -161,7 +166,7 @@
   .stat-pill { background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
   .perfect-iv { color: #d97706; font-weight: bold; }
   
-  .scrollable-matches { max-height: 250px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 8px; background: #ffffff; }
+  .scrollable-matches { max-height: calc(100vh - 200px); min-height: 350px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 8px; background: #ffffff; }
   .match-row { cursor: pointer; transition: background 0.15s; }
   .match-row:hover { background-color: #f9fafb; }
   .selected-row { background-color: #e0e7ff !important; box-shadow: inset 4px 0 0 #3730a3; }
@@ -170,12 +175,12 @@
 <body>
 
 <div class="top-header">
-   <div class="header-left">
+  <div class="header-left">
     <h1>
-      Wild IV Evaluator 
-      <span style="font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 3px 6px; border-radius: 6px; margin-left: 8px; letter-spacing: 0;">v1.1</span>
+      Wild IV Evaluator
+      <span style="font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 3px 6px; border-radius: 6px; margin-left: 8px; letter-spacing: 0; display: inline-block; vertical-align: middle;">v1.2</span>
     </h1>
-    <span>Field Researcher Tools</span>
+    <span class="subtitle">Field Researcher Tools</span>
   </div>
   <div class="header-right">
     <div class="trainer-lvl">
@@ -187,9 +192,8 @@
 
 <div class="dashboard">
   
-  <!-- LEFT COLUMN -->
+  <!-- COLUMN 1: INPUTS -->
   <div class="col-left">
-    
     <div class="tabs">
       <button id="btn-wild" class="tab active" onclick="setMode('wild')">Wild Encounter</button>
       <button id="btn-caught" class="tab" onclick="setMode('caught')">Already Caught</button>
@@ -227,9 +231,19 @@
       </div>
 
       <div class="card">
-        <div class="slider-header-row">
+        <div class="slider-header-row" style="margin-bottom: 5px;">
           <div class="card-header" style="margin:0;">Catch Circle Color</div>
           <div class="level-badge" id="levelDisplay">Lvl 15 (±2)</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <label style="font-size: 11px; font-weight: bold; color: var(--text-muted);">SLIDER SLACK</label>
+          <select id="levelSlack" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-light); font-size: 12px; background: #fff; cursor: pointer;">
+            <option value="0">Exact Level (±0)</option>
+            <option value="1">Tight (±1)</option>
+            <option value="2" selected>Normal (±2)</option>
+            <option value="3">Loose (±3)</option>
+            <option value="all">Show All Levels</option>
+          </select>
         </div>
         <div class="range-container">
           <input type="range" id="levelSlider" min="1" max="50" value="15">
@@ -265,12 +279,10 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- RIGHT COLUMN -->
-  <div class="col-right">
-    
+  <!-- COLUMN 2: PVE & PVP RANKINGS -->
+  <div class="col-middle">
     <div class="card">
       <div class="card-header">PVE Base Stat Assessment</div>
       <div id="pve-results" style="font-size: 15px; color: var(--text-main);">
@@ -295,8 +307,11 @@
         </tbody>
       </table>
     </div>
+  </div>
 
-    <div class="card" id="card-possibilities">
+  <!-- COLUMN 3: POSSIBILITIES -->
+  <div class="col-right">
+    <div class="card" id="card-possibilities" style="height: 100%; box-sizing: border-box;">
       <div class="card-header">IV Probability Match</div>
       <div id="results">
         <div class="placeholder-text">
@@ -304,8 +319,8 @@
         </div>
       </div>
     </div>
-
   </div>
+
 </div>
 
 <script>
@@ -343,6 +358,7 @@
     cp: document.getElementById('cp'),
     weather: document.getElementById('weather'),
     slider: document.getElementById('levelSlider'),
+    slack: document.getElementById('levelSlack'),
     levelDisp: document.getElementById('levelDisplay'),
     results: document.getElementById('results'),
     pveResults: document.getElementById('pve-results'),
@@ -364,13 +380,21 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
-      const junkForms = ['purified', 'costume', 'hat', 'crown', 'flower', '2019', '2020', '2021', '2022', '2023', '2024', 'clone', 'libre', 'star', 'holiday', 'event', 'anniversary', 'winter', 'summer', 'fall', 'spring', 'bowtie', 'scarf', 'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 'trick', 'treat', 'spooky', 'fragment', 'explorer'];
+      // Expanded junk form blacklist to strictly remove costumes/events
+      const junkForms = [
+        'purified', 'costume', 'hat', 'crown', 'flower', '2019', '2020', '2021', '2022', '2023', '2024', 
+        'clone', 'libre', 'star', 'holiday', 'event', 'anniversary', 'winter', 'summer', 'fall', 'spring', 
+        'bowtie', 'scarf', 'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 'trick', 
+        'treat', 'spooky', 'fragment', 'explorer', 'cap', 'beanie', 'mischief', 'ribbon', 'band', 'bg', 
+        'background', 'go fest', 'safari', 'crash', 'lucha', 'rock star', 'pop star', 'phd', 'flying', 
+        'wwe', 'championship', 'world', 'jeans', 'sneakers', 'glasses', 'fc', 'go', 'tour'
+      ];
 
       stats.forEach(p => {
         let name = p.pokemon_name;
         if (p.form && p.form !== 'Normal') {
           let fLow = p.form.toLowerCase();
-          if (junkForms.some(w => fLow.includes(w))) return;
+          if (junkForms.some(w => fLow.includes(w))) return; // Aggressive filtering
           name = `${p.pokemon_name} (${p.form})`;
         }
         pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
@@ -436,13 +460,20 @@
 
   function updateSliderVisuals() {
     let level = parseInt(ui.slider.value);
-    ui.levelDisp.innerText = `Lvl ${level} (±2)`;
+    let slackVal = ui.slack.value;
+    let slackText = slackVal === 'all' ? '(All)' : `(±${slackVal})`;
+    
+    ui.levelDisp.innerText = `Lvl ${level} ${slackText}`;
     let hue = 120 - ((level - 1) / 49) * 120;
     ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
   }
   
   updateSliderVisuals();
   ui.slider.addEventListener('input', function() {
+    updateSliderVisuals();
+    calculateMatches();
+  });
+  ui.slack.addEventListener('change', function() {
     updateSliderVisuals();
     calculateMatches();
   });
@@ -567,7 +598,7 @@
       forms.forEach(p => formTags += makeTag("Form", p, "tag-form"));
       formsHtml = `
         <details class="forms-collapse">
-          <summary>View Alternative Forms (${forms.length})</summary>
+          <summary>▶ View Alternative Forms (${forms.length})</summary>
           <div class="forms-tag-container">${formTags}</div>
         </details>
       `;
@@ -615,12 +646,13 @@
     if (isCaughtMode) return; 
 
     if (currentMatches.length === 0) {
-      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} near Level ${ui.slider.value}.</strong><br>Try sliding the color up or down slightly.</div>`;
+      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} at the selected levels.</strong><br>Try adjusting the slider slack or color.</div>`;
       return;
     }
 
+    let slackText = ui.slack.value === 'all' ? '(All)' : `(±${ui.slack.value})`;
     let htmlOut = `<div style="margin-bottom:10px; font-size:12px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
-        <span>${currentMatches.length} POSSIBILITIES (±2 LVLS)</span>
+        <span>${currentMatches.length} POSSIBILITIES ${slackText}</span>
         <span style="font-style:italic; font-weight:normal;">Click a row to isolate</span>
     </div>`;
     
@@ -754,6 +786,7 @@
     // WILD ENCOUNTER LOGIC
     let cpInput = parseInt(ui.cp.value);
     let baseLevel = parseInt(ui.slider.value);
+    let slackVal = ui.slack.value;
     let isWeather = ui.weather.checked;
 
     if (!cpInput) {
@@ -764,7 +797,16 @@
 
     let minIV = isWeather ? 4 : 0;
     
-    for (let l = Math.max(1, baseLevel - 2); l <= Math.min(50, baseLevel + 2); l++) {
+    let minLvl = 1;
+    let maxLvl = 50;
+    
+    if (slackVal !== 'all') {
+      let sNum = parseInt(slackVal);
+      minLvl = Math.max(1, baseLevel - sNum);
+      maxLvl = Math.min(50, baseLevel + sNum);
+    }
+    
+    for (let l = minLvl; l <= maxLvl; l++) {
       let cpm = getCPM(l);
       for (let a = minIV; a <= 15; a++) {
         for (let d = minIV; d <= 15; d++) {
