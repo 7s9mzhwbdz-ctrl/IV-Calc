@@ -372,6 +372,18 @@
     
     trainerLevel: document.getElementById('trainerLevel')
   };
+  
+    // --- LOCAL STORAGE: TRAINER LEVEL ---
+  // 1. Check if there's a saved level and apply it on load
+  if (localStorage.getItem('savedTrainerLevel')) {
+    ui.trainerLevel.value = localStorage.getItem('savedTrainerLevel');
+  }
+
+  // 2. Listen for changes and save them immediately
+  ui.trainerLevel.addEventListener('input', function() {
+    localStorage.setItem('savedTrainerLevel', this.value);
+  });
+
 
   async function loadData() {
     try {
