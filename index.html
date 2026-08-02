@@ -3,7 +3,6 @@
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Wild Encounter IV Evaluator</title>
@@ -65,7 +64,7 @@
     margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     position: relative;
-    background: var(--card-bg); /* ensure background is solid for fullscreen */
+    background: var(--card-bg); 
   }
   .card-header {
     font-size: 12px; font-weight: 700; color: var(--primary-blue);
@@ -79,21 +78,76 @@
   /* Expand Button */
   .expand-btn {
     background: #f4f6fc; border: 1px solid #c7d2fe; border-radius: 4px; padding: 3px 8px; 
-    font-size: 10px; font-weight: bold; color: var(--primary-blue); cursor: pointer; transition: 0.2s;
+    font-size: 12px; font-weight: bold; color: var(--primary-blue); cursor: pointer; transition: 0.2s;
   }
   .expand-btn:hover { background: var(--primary-blue); color: white; }
 
-  /* Fullscreen Mode */
+  /* --- FULLSCREEN MODE --- */
   .is-fullscreen {
     position: fixed !important; top: 0 !important; left: 0 !important; 
     width: 100vw !important; height: 100vh !important; z-index: 9999 !important;
     margin: 0 !important; border-radius: 0 !important; overflow-y: auto !important;
     background: #ffffff !important; padding: 20px !important; box-sizing: border-box !important;
   }
-  .is-fullscreen .scrollable-cp-list,
-  .is-fullscreen .scrollable-matches {
-    max-height: calc(100vh - 100px) !important;
+  
+  /* Multicolumn layout for expanded Hundo/Nundo list */
+  .is-fullscreen .scrollable-cp-list {
+    max-height: calc(100vh - 80px) !important;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    padding: 10px;
+    background: transparent;
+    border: none;
   }
+  .is-fullscreen .cp-list-item {
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: #fff;
+    margin: 0;
+  }
+  .is-fullscreen .cp-list-item.highlight {
+    position: relative; 
+    box-shadow: 0 0 0 2px #c7d2fe; 
+  }
+
+  /* Multicolumn layout for expanded Probabilities/Matches */
+  .is-fullscreen .scrollable-matches {
+    max-height: calc(100vh - 120px) !important;
+    padding: 10px;
+    background: transparent;
+    border: none;
+  }
+  .is-fullscreen .scrollable-matches table {
+    display: block; width: 100%;
+  }
+  .is-fullscreen .scrollable-matches thead {
+    display: none; /* Hide header in multi-column grid to avoid clutter */
+  }
+  .is-fullscreen .scrollable-matches tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .is-fullscreen .scrollable-matches tr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 8px 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .is-fullscreen .scrollable-matches td {
+    border: none;
+    padding: 0;
+  }
+  .is-fullscreen .scrollable-matches tr.selected-row {
+    background-color: #e0e7ff !important;
+    box-shadow: inset 0 0 0 2px #3730a3;
+  }
+
   .is-fullscreen .results-table th { top: -20px; }
 
   .tabs { display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 15px; border: 1px solid var(--border-light); }
@@ -114,7 +168,7 @@
 
   /* --- AUTOCOMPLETE & SEARCH X --- */
   .autocomplete-container { position: relative; width: 100%; display: flex; align-items: center;}
-  #pokemon { padding-right: 30px; } /* Leave room for X */
+  #pokemon { padding-right: 30px; } 
   .clear-btn {
     position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
     cursor: pointer; font-size: 18px; color: var(--text-muted); line-height: 1;
@@ -252,7 +306,7 @@
 
 <div class="top-header">
   <div class="header-left">
-    <h1>Wild IV Evaluator <span class="version-badge">v2.0</span></h1>
+    <h1>Wild IV Evaluator <span class="version-badge">v2.1</span></h1>
   </div>
   <div class="header-right">
     <div class="trainer-lvl">
@@ -326,7 +380,7 @@
       <div id="hundo-nundo-container" style="display: none; margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-light);">
         <div class="card-header card-header-flex" style="margin-bottom: 8px; font-size: 10px; color: var(--text-muted);">
           <span>Hundo / Nundo CP Reference</span>
-          <button class="expand-btn" onclick="toggleFullscreen('hundo-nundo-container', this)">⛶ Expand</button>
+          <button class="expand-btn" onclick="toggleFullscreen('hundo-nundo-container', this)" title="Expand">⛶</button>
         </div>
         <div id="quick-cp-list" class="scrollable-cp-list"></div>
       </div>
@@ -363,7 +417,7 @@
     <div class="card" id="pvp-card">
       <div class="card-header card-header-flex">
         <span>Analysis & Rankings</span>
-        <button class="expand-btn" onclick="toggleFullscreen('pvp-card', this)">⛶ Expand</button>
+        <button class="expand-btn" onclick="toggleFullscreen('pvp-card', this)" title="Expand">⛶</button>
       </div>
       
       <!-- Compact PvE Bar -->
@@ -395,7 +449,7 @@
     <div class="card" id="card-possibilities" style="display:flex; flex-direction:column; height: 100%; box-sizing: border-box;">
       <div class="card-header card-header-flex">
         <span>IV Probabilities</span>
-        <button class="expand-btn" onclick="toggleFullscreen('card-possibilities', this)">⛶ Expand</button>
+        <button class="expand-btn" onclick="toggleFullscreen('card-possibilities', this)" title="Expand">⛶</button>
       </div>
       <div id="hundo-nundo-alert"></div>
       <div id="results" style="flex: 1;">
@@ -432,10 +486,12 @@
     
     if (isFull) {
       document.body.style.overflow = 'hidden';
-      btn.innerHTML = '✖ Close';
+      btn.innerHTML = '✖';
+      btn.title = 'Close';
     } else {
       document.body.style.overflow = 'auto';
-      btn.innerHTML = '⛶ Expand';
+      btn.innerHTML = '⛶';
+      btn.title = 'Expand';
     }
   };
 
