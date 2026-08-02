@@ -61,12 +61,37 @@
     padding: 15px;
     margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    position: relative;
+    background: var(--card-bg); /* ensure background is solid for fullscreen */
   }
   .card-header {
     font-size: 12px; font-weight: 700; color: var(--primary-blue);
     text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;
   }
+  .card-header-flex {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
   .input-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+
+  /* Expand Button */
+  .expand-btn {
+    background: #f4f6fc; border: 1px solid #c7d2fe; border-radius: 4px; padding: 3px 8px; 
+    font-size: 10px; font-weight: bold; color: var(--primary-blue); cursor: pointer; transition: 0.2s;
+  }
+  .expand-btn:hover { background: var(--primary-blue); color: white; }
+
+  /* Fullscreen Mode */
+  .is-fullscreen {
+    position: fixed !important; top: 0 !important; left: 0 !important; 
+    width: 100vw !important; height: 100vh !important; z-index: 9999 !important;
+    margin: 0 !important; border-radius: 0 !important; overflow-y: auto !important;
+    background: #ffffff !important; padding: 20px !important; box-sizing: border-box !important;
+  }
+  .is-fullscreen .scrollable-cp-list,
+  .is-fullscreen .scrollable-matches {
+    max-height: calc(100vh - 100px) !important;
+  }
+  .is-fullscreen .results-table th { top: -20px; }
 
   .tabs { display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 15px; border: 1px solid var(--border-light); }
   .tab { flex: 1; text-align: center; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-muted); border: none; background: transparent; }
@@ -88,16 +113,9 @@
   .autocomplete-container { position: relative; width: 100%; display: flex; align-items: center;}
   #pokemon { padding-right: 30px; } /* Leave room for X */
   .clear-btn {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    font-size: 18px;
-    color: var(--text-muted);
-    line-height: 1;
-    display: none;
-    user-select: none;
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    cursor: pointer; font-size: 18px; color: var(--text-muted); line-height: 1;
+    display: none; user-select: none;
   }
   .clear-btn:hover { color: var(--text-main); }
   
@@ -190,6 +208,14 @@
   .match-row:hover { background-color: #f9fafb; }
   .selected-row { background-color: #e0e7ff !important; box-shadow: inset 4px 0 0 #3730a3; }
 
+  /* Hundo/Nundo Alert Box */
+  #hundo-nundo-alert:empty { display: none; }
+  .hn-alert { padding: 10px; margin-bottom: 12px; border-radius: 6px; font-weight: 700; text-align: center; font-size: 13px; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1); animation: popIn 0.3s ease-out; }
+  .hn-hundo { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
+  .hn-nundo { background: #fecaca; color: #991b1b; border: 1px solid #fca5a5; }
+  .hn-both { background: #e9d5ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+  @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
   /* --- MOBILE RESPONSIVENESS --- */
   @media (max-width: 1024px) {
     .dashboard { grid-template-columns: 1fr 1fr; padding: 8px; gap: 8px; }
@@ -223,7 +249,7 @@
 
 <div class="top-header">
   <div class="header-left">
-    <h1>Wild IV Evaluator <span class="version-badge">v1.9</span></h1>
+    <h1>Wild IV Evaluator <span class="version-badge">v2.0</span></h1>
   </div>
   <div class="header-right">
     <div class="trainer-lvl">
@@ -295,7 +321,10 @@
 
       <!-- Hundo/Nundo Quick Reference Scroll List -->
       <div id="hundo-nundo-container" style="display: none; margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-light);">
-        <label class="input-label">Hundo / Nundo CP Reference</label>
+        <div class="card-header card-header-flex" style="margin-bottom: 8px; font-size: 10px; color: var(--text-muted);">
+          <span>Hundo / Nundo CP Reference</span>
+          <button class="expand-btn" onclick="toggleFullscreen('hundo-nundo-container', this)">⛶ Expand</button>
+        </div>
         <div id="quick-cp-list" class="scrollable-cp-list"></div>
       </div>
     </div>
@@ -328,8 +357,11 @@
 
   <!-- COLUMN 2: ANALYSIS (PvE + PvP Combined) -->
   <div class="col-middle">
-    <div class="card">
-      <div class="card-header">Analysis & Rankings</div>
+    <div class="card" id="pvp-card">
+      <div class="card-header card-header-flex">
+        <span>Analysis & Rankings</span>
+        <button class="expand-btn" onclick="toggleFullscreen('pvp-card', this)">⛶ Expand</button>
+      </div>
       
       <!-- Compact PvE Bar -->
       <div id="pve-results">
@@ -358,7 +390,11 @@
   <!-- COLUMN 3: POSSIBILITIES -->
   <div class="col-right">
     <div class="card" id="card-possibilities" style="display:flex; flex-direction:column; height: 100%; box-sizing: border-box;">
-      <div class="card-header">IV Probabilities</div>
+      <div class="card-header card-header-flex">
+        <span>IV Probabilities</span>
+        <button class="expand-btn" onclick="toggleFullscreen('card-possibilities', this)">⛶ Expand</button>
+      </div>
+      <div id="hundo-nundo-alert"></div>
       <div id="results" style="flex: 1;">
         <div class="placeholder-text">Enter CP to evaluate...</div>
       </div>
@@ -385,6 +421,20 @@
     if (upper > 50) return CPM_BASE[50]; 
     return Math.sqrt((Math.pow(CPM_BASE[lower], 2) + Math.pow(CPM_BASE[upper], 2)) / 2);
   }
+
+  // --- FULLSCREEN TOGGLE ---
+  window.toggleFullscreen = function(elId, btn) {
+    const el = document.getElementById(elId);
+    const isFull = el.classList.toggle('is-fullscreen');
+    
+    if (isFull) {
+      document.body.style.overflow = 'hidden';
+      btn.innerHTML = '✖ Close';
+    } else {
+      document.body.style.overflow = 'auto';
+      btn.innerHTML = '⛶ Expand';
+    }
+  };
 
   let pokeData = {};
   let pokemonNames = [];
@@ -414,7 +464,8 @@
     cDef: document.getElementById('caught-def'),
     cSta: document.getElementById('caught-sta'),
 
-    trainerLevel: document.getElementById('trainerLevel')
+    trainerLevel: document.getElementById('trainerLevel'),
+    alertBox: document.getElementById('hundo-nundo-alert')
   };
 
   // --- LOCAL STORAGE ---
@@ -443,8 +494,8 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
-      // STRICT WHITELIST APPROACH
-      const validFormsRegex = /alola|galar|hisui|paldea|origin|altered|therian|incarnate|attack|defense|speed|trash|sandy|plant|sunshine|overcast|east|west|heat|wash|frost|fan|mow|land|sky|standard|zen|black|white|ordinary|resolute|aria|pirouette|burn|chill|douse|shock|confined|unbound|baile|pom-pom|pa'u|sensu|midday|midnight|dusk|solo|school|10%|50%|complete|dawn|ultra|amped|low.?key|single|rapid|ice|shadow|hero|zero|chest|roaming|bloodmoon|small|average|large|super|ash|sunny|rainy|snowy|mega|primal|bug|dark|dragon|electric|fairy|fighting|fire|flying|ghost|grass|ground|poison|psychic|rock|steel|water/i;
+      // STRICT WHITELIST APPROACH: Excludes all purely cosmetic forms/costumes. Keeps stat-altering variants.
+      const validFormsRegex = /alola|galar|hisui|paldea|origin|altered|therian|incarnate|attack|defense|speed|standard|zen|black|white|resolute|pirouette|confined|unbound|midday|midnight|dusk|10%|50%|complete|dawn|ultra|amped|low.?key|single|rapid|shadow|hero|roaming|bloodmoon|small|average|large|super|mega|primal|crowned|normal/i;
 
       stats.forEach(p => {
         let name = p.pokemon_name;
@@ -508,6 +559,7 @@
     ui.pveResults.innerHTML = `<div class="compact-pve-bar" style="justify-content: center; color: var(--text-muted);">Select a Pokémon to view PvE base stats.</div>`;
     ui.pvpBody.innerHTML = `<tr><td colspan="5" class="placeholder-text">Awaiting input...</td></tr>`;
     ui.results.innerHTML = `<div class="placeholder-text">Enter CP to evaluate...</div>`;
+    ui.alertBox.innerHTML = '';
     document.getElementById('hundo-nundo-container').style.display = 'none';
   });
 
@@ -875,6 +927,7 @@
     renderPVE(name, data);
     renderReferenceCPs(data);
     currentMatches = [];
+    ui.alertBox.innerHTML = '';
 
     // ALREADY CAUGHT MODE LOGIC
     if (isCaughtMode) {
@@ -939,6 +992,20 @@
         return Math.abs(x.level - baseLevel) - Math.abs(y.level - baseLevel);
     });
     
+    // --- HUNDO / NUNDO ALERTS ---
+    if (currentMatches.length > 0) {
+      let hasHundo = currentMatches.some(m => m.total === "100.0");
+      let hasNundo = currentMatches.some(m => m.total === "0.0");
+
+      if (hasHundo && hasNundo) {
+        ui.alertBox.innerHTML = `<div class="hn-alert hn-both">⚠️ Hundo & Nundo Possible at this CP!</div>`;
+      } else if (hasHundo) {
+        ui.alertBox.innerHTML = `<div class="hn-alert hn-hundo">🌟 HUNDO Possible at this CP! (100%)</div>`;
+      } else if (hasNundo) {
+        ui.alertBox.innerHTML = `<div class="hn-alert hn-nundo">💀 NUNDO Possible at this CP! (0%)</div>`;
+      }
+    }
+
     selectedMatch = null;
     renderIVList();
     renderPVPTable(name, data);
