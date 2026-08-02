@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Wild Encounter IV Evaluator</title>
@@ -14,11 +12,7 @@
     --primary-blue: #3c52b2;
     --header-blue: #2c3e9c;
     --accent-yellow: #fcd535;
-<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
---text-main: #333333;
+    --text-main: #333333;
     --text-muted: #6b7280;
     --border-light: #e5e7eb;
     --cp-bg: #f4f6fc;
@@ -36,131 +30,244 @@
   .top-header {
     background: linear-gradient(90deg, var(--primary-blue), var(--header-blue));
     color: white;
-    padding: 15px 30px;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   }
-  .header-left h1 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
-  .header-left span { font-size: 11px; color: var(--accent-yellow); letter-spacing: 1px; text-transform: uppercase; display: block; margin-top: 4px; font-weight: 600;}
+  .header-left h1 { margin: 0; font-size: 18px; display: flex; align-items: center; }
+  .version-badge { font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 6px; margin-left: 8px; }
   .header-right { display: flex; gap: 10px; align-items: center; }
-  .trainer-lvl { background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 6px; font-size: 14px; display: flex; align-items: center; gap: 10px;}
-  .trainer-lvl input { background: transparent; border: none; color: white; width: 30px; font-weight: bold; font-size: 14px; outline: none;}
+  .trainer-lvl { background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 6px; font-weight: 600;}
+  .trainer-lvl input { background: transparent; border: none; color: white; width: 24px; font-weight: bold; font-size: 13px; outline: none; text-align: center;}
 
   /* --- LAYOUT --- */
   .dashboard {
     display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 20px;
-    padding: 30px;
-    max-width: 1200px;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 15px;
+    padding: 20px;
+    max-width: 1400px;
     margin: 0 auto;
-  }
-  @media (max-width: 768px) {
-    .dashboard { grid-template-columns: 1fr; padding: 15px; }
-    .top-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+    align-items: start;
   }
 
-  /* --- CARDS --- */
+  /* --- CARDS & TABS --- */
   .card {
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--border-light);
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 15px;
+    margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    position: relative;
+    background: var(--card-bg); /* ensure background is solid for fullscreen */
   }
   .card-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 15px;
-    letter-spacing: 0.5px;
+    font-size: 12px; font-weight: 700; color: var(--primary-blue);
+    text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;
   }
-  .card-header .icon { background: var(--primary-blue); color: white; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 12px; }
+  .card-header-flex {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .input-label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+
+  /* Expand Button */
+  .expand-btn {
+    background: #f4f6fc; border: 1px solid #c7d2fe; border-radius: 4px; padding: 3px 8px; 
+    font-size: 10px; font-weight: bold; color: var(--primary-blue); cursor: pointer; transition: 0.2s;
+  }
+  .expand-btn:hover { background: var(--primary-blue); color: white; }
+
+  /* Fullscreen Mode */
+  .is-fullscreen {
+    position: fixed !important; top: 0 !important; left: 0 !important; 
+    width: 100vw !important; height: 100vh !important; z-index: 9999 !important;
+    margin: 0 !important; border-radius: 0 !important; overflow-y: auto !important;
+    background: #ffffff !important; padding: 20px !important; box-sizing: border-box !important;
+  }
+  .is-fullscreen .scrollable-cp-list,
+  .is-fullscreen .scrollable-matches {
+    max-height: calc(100vh - 100px) !important;
+  }
+  .is-fullscreen .results-table th { top: -20px; }
+
+  .tabs { display: flex; background: #f3f4f6; border-radius: 8px; padding: 4px; margin-bottom: 15px; border: 1px solid var(--border-light); }
+  .tab { flex: 1; text-align: center; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-muted); border: none; background: transparent; }
+  .tab.active { background: white; color: var(--primary-blue); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
   /* --- INPUTS --- */
-  input[type="text"] {
-    width: 100%; padding: 12px 15px; border: 1px solid var(--border-light); border-radius: 8px;
-    box-sizing: border-box; font-size: 15px; background: #f9fafb; outline: none; transition: 0.2s;
+  input[type="text"], input[type="number"].box-input, select.box-input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border-light); border-radius: 6px;
+    box-sizing: border-box; font-size: 14px; background: #f9fafb; outline: none; transition: 0.2s;
   }
-  input[type="text"]:focus { border-color: var(--primary-blue); background: #fff; }
+  input[type="text"]:focus, input[type="number"].box-input:focus, select.box-input:focus { border-color: var(--primary-blue); background: #fff; }
+  
+  /* Extremely Compact Mobile Inputs */
+  .input-group-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .cp-input-wrap { flex: 1; }
+  .weather-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9fafb; border: 1px solid var(--border-light); border-radius: 6px; padding: 0 12px; }
 
-  /* --- AUTOCOMPLETE --- */
-  .autocomplete-container { position: relative; width: 100%; }
+  /* --- AUTOCOMPLETE & SEARCH X --- */
+  .autocomplete-container { position: relative; width: 100%; display: flex; align-items: center;}
+  #pokemon { padding-right: 30px; } /* Leave room for X */
+  .clear-btn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    cursor: pointer; font-size: 18px; color: var(--text-muted); line-height: 1;
+    display: none; user-select: none;
+  }
+  .clear-btn:hover { color: var(--text-main); }
+  
   .autocomplete-items {
-    position: absolute; border: 1px solid var(--border-light); border-radius: 8px; z-index: 99; top: 100%; left: 0; right: 0;
+    position: absolute; border: 1px solid var(--border-light); border-radius: 6px; z-index: 99; top: 100%; left: 0; right: 0;
     max-height: 200px; overflow-y: auto; background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 5px;
   }
-  .autocomplete-items div { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+  .autocomplete-items div { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
   .autocomplete-items div:active, .autocomplete-items div:hover { background-color: #f3f4f6; }
   .autocomplete-items strong { color: var(--primary-blue); }
 
-  /* --- OBSERVED CP --- */
-  .cp-input-container {
-    background: var(--cp-bg); border: 1px solid var(--border-light); border-radius: 8px; padding: 10px; text-align: center;
-  }
-  .cp-input-container input {
-    background: transparent; border: none; font-size: 42px; font-weight: 700; color: var(--cp-text); text-align: center; width: 100%; outline: none;
-  }
-  .cp-input-container input::placeholder { color: #d1d5db; font-size: 24px; vertical-align: middle; }
+  /* --- INTERNAL RELATED LINKS --- */
+  .related-container { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .related-tag { background: #f3f4f6; color: var(--text-muted); padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; cursor: pointer; border: 1px solid var(--border-light); }
+  .related-tag.tag-evo { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
+  .related-tag.tag-form { background: #fffbeb; color: #b45309; border-color: #fde68a; }
 
   /* --- WEATHER TOGGLE --- */
-  .weather-row { display: flex; justify-content: space-between; align-items: center; }
-  .weather-info strong { display: block; font-size: 14px; margin-bottom: 4px; }
-  .weather-info span { font-size: 11px; color: var(--text-muted); }
-  
-  .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
   .switch input { opacity: 0; width: 0; height: 0; }
-  .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-  .slider-toggle:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-  input:checked + .slider-toggle { background-color: #ff9800; }
-  input:checked + .slider-toggle:before { transform: translateX(20px); }
+  .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+  .slider-toggle:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+  input:checked + .slider-toggle { background-color: var(--primary-blue); }
+  input:checked + .slider-toggle:before { transform: translateX(16px); }
 
   /* --- CATCH CIRCLE SLIDER --- */
-  .slider-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-  .level-badge { border: 2px solid var(--accent-yellow); color: var(--accent-yellow); padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; background: #fffdf0; }
+  .slider-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .level-badge { border: 1px solid var(--primary-blue); color: var(--primary-blue); padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; background: #f4f6fc; }
   
-  .range-container { margin-top: 10px; }
+  .range-container { margin-top: 8px; }
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
   input[type=range]:focus { outline: none; }
-  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, #4caf50, #ffeb3b, #f44336); border-radius: 4px; }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
-    background: var(--thumb-color, #ffeb3b); border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    cursor: pointer; margin-top: -8px; transition: background 0.1s;
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, hsl(120, 100%, 50%), hsl(60, 100%, 50%), hsl(0, 100%, 50%)); border-radius: 4px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: var(--thumb-color, #ffeb3b); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer; margin-top: -7px; }
+  .slider-labels { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-muted); font-weight: 600; }
+
+  /* --- SCROLLABLE CP LIST --- */
+  .scrollable-cp-list {
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: #ffffff;
+    margin-top: 8px;
   }
-  .slider-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted); font-weight: 600; }
+  .cp-list-item {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 11px;
+    color: var(--text-main);
+  }
+  .cp-list-item:last-child {
+    border-bottom: none;
+  }
+  .cp-list-item.highlight {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-bottom: 2px solid #c7d2fe;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .slider-pill {
+    background: #3730a3;
+    color: white;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
 
-  /* --- RIGHT COLUMN SECTIONS --- */
-  .placeholder-text { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 20px; }
+  /* --- TABLES & RESULTS --- */
+  .placeholder-text { color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px; }
   
-  .results-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
-  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
-  .results-table td { padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+  .results-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+  .results-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 10px; padding: 8px 2px; border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: white; z-index: 2;}
+  .results-table td { padding: 8px 2px; border-bottom: 1px solid #f3f4f6; }
   .results-table tr:last-child td { border-bottom: none; }
+  
+  .compact-pve-bar { display: flex; justify-content: space-between; align-items: center; background: #f4f6fc; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; }
 
-  .stat-pill { background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
+  .evo-header { background: #f9fafb; font-size: 10px; text-transform: uppercase; color: var(--primary-blue); font-weight: 700; padding: 6px 0; border-top: 2px solid var(--border-light); }
   .perfect-iv { color: #d97706; font-weight: bold; }
+  
+  /* Dynamic height for matches */
+  .scrollable-matches { max-height: calc(100vh - 200px); overflow-y: auto; border: 1px solid var(--border-light); border-radius: 6px; background: #ffffff; }
+  .match-row { cursor: pointer; transition: background 0.1s; }
+  .match-row:hover { background-color: #f9fafb; }
+  .selected-row { background-color: #e0e7ff !important; box-shadow: inset 4px 0 0 #3730a3; }
+
+  /* Hundo/Nundo Alert Box */
+  #hundo-nundo-alert:empty { display: none; }
+  .hn-alert { padding: 10px; margin-bottom: 12px; border-radius: 6px; font-weight: 700; text-align: center; font-size: 13px; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1); animation: popIn 0.3s ease-out; }
+  .hn-hundo { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
+  .hn-nundo { background: #fecaca; color: #991b1b; border: 1px solid #fca5a5; }
+  .hn-both { background: #e9d5ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+  @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+  /* --- MOBILE RESPONSIVENESS --- */
+  @media (max-width: 1024px) {
+    .dashboard { grid-template-columns: 1fr 1fr; padding: 8px; gap: 8px; }
+    .col-left { grid-column: span 2; }
+    .col-middle { grid-column: span 1; }
+    .col-right { grid-column: span 1; }
+
+    .card { padding: 10px; margin-bottom: 0; }
+    .card-header { margin-bottom: 8px; font-size: 11px; }
+    .top-header { padding: 10px; }
+    .scrollable-matches { max-height: 40vh; } 
+    .tabs { margin-bottom: 10px; }
+    
+    .results-table { font-size: 10px; }
+    .results-table th { font-size: 9px; padding: 4px 1px; letter-spacing: -0.2px; }
+    .results-table td { padding: 6px 1px; }
+    .hide-mobile { display: none; }
+
+    .exact-stats-grid { display: flex !important; gap: 4px !important; }
+    .exact-stats-grid > div { flex: 1; }
+    .exact-stats-grid input { padding: 6px 2px; text-align: center; font-size: 12px; }
+    
+    input[type="text"], input[type="number"].box-input, select.box-input { padding: 8px; font-size: 13px; }
+    .input-group-row { margin-bottom: 8px; }
+    
+    .compact-pve-bar { flex-direction: column; text-align: center; gap: 4px; padding: 6px; font-size: 10px; }
+  }
 </style>
 </head>
 <body>
+
 <div class="top-header">
-  <div class="header-left"><h1>Wild IV Evaluator <span class="version-badge">v2.1</span></h1></div>
-  <div class="header-right"><div class="trainer-lvl">Tr. Lvl <input type="number" id="trainerLevel" value="50" max="80" min="1"></div></div>
+  <div class="header-left">
+    <h1>Wild IV Evaluator <span class="version-badge">v2.0</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="trainer-lvl">
+      Tr. Lvl <input type="number" id="trainerLevel" value="50" max="80" min="1">
+    </div>
+  </div>
 </div>
 
 <div class="dashboard">
+  
+  <!-- COLUMN 1: INPUTS -->
   <div class="col-left">
     <div class="tabs">
       <button id="btn-wild" class="tab active" onclick="setMode('wild')">Wild Encounter</button>
       <button id="btn-caught" class="tab" onclick="setMode('caught')">Already Caught</button>
     </div>
+
+    <!-- Search Card -->
     <div class="card">
       <div class="card-header">Target Identification</div>
       <div class="autocomplete-container">
@@ -170,287 +277,742 @@
       </div>
       <div id="related-pokemon"></div>
     </div>
+
+    <!-- Inputs for WILD ENCOUNTER mode -->
     <div id="wild-inputs" class="card">
       <div class="card-header">Encounter Details</div>
+      
+      <!-- Compact Grid for CP & Weather -->
       <div class="input-group-row">
-        <div class="cp-input-wrap"><label class="input-label">Observed CP</label><input type="number" class="box-input" id="cp" placeholder="e.g. 10" style="font-size:18px;font-weight:700;text-align:center"></div>
-        <div class="weather-wrap"><label class="input-label">Weather</label><label class="switch"><input type="checkbox" id="weather"><span class="slider-toggle"></span></label></div>
+        <div class="cp-input-wrap">
+          <label class="input-label">Observed CP</label>
+          <input type="number" class="box-input" id="cp" placeholder="e.g. 10" style="font-size: 18px; font-weight: bold; text-align: center;">
+        </div>
+        <div class="weather-wrap">
+          <label class="input-label">Weather</label>
+          <label class="switch">
+            <input type="checkbox" id="weather">
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
       </div>
+
+      <!-- Compact Slider Section -->
       <div class="slider-header-row">
-        <label class="input-label" style="margin:0">Ring Color</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <select id="levelSlack" class="box-input" style="padding:2px 4px;font-size:10px;width:auto;height:22px">
-            <option value="0">±0 (Exact)</option><option value="1">±1 (Tight)</option><option value="2" selected>±2 (Normal)</option><option value="3">±3 (Loose)</option><option value="all">Scan All (1-50)</option>
+        <label class="input-label" style="margin:0;">Ring Color</label>
+        <div style="display:flex; gap: 8px; align-items:center;">
+          <select id="levelSlack" class="box-input" style="padding: 2px 4px; font-size: 10px; width: auto; height: 22px;">
+            <option value="0">±0 (Exact)</option>
+            <option value="1">±1 (Tight)</option>
+            <option value="2" selected>±2 (Normal)</option>
+            <option value="3">±3 (Loose)</option>
+            <option value="all">Scan All (1-50)</option>
           </select>
           <div class="level-badge" id="levelDisplay">Lvl 15</div>
         </div>
       </div>
       <div class="range-container">
         <input type="range" id="levelSlider" min="1" max="50" value="15">
-        <div class="slider-labels"><span>Green (1)</span><span>Red (50)</span></div>
+        <div class="slider-labels">
+          <span>Green (1)</span>
+          <span>Red (50)</span>
+        </div>
       </div>
-      <div id="hundo-nundo-container" style="display:none;margin-top:15px;padding-top:12px;border-top:1px dashed var(--border-light)">
-        <div class="card-header card-header-flex" style="margin-bottom:8px;font-size:10px;color:var(--text-muted)">
-          <span>Hundo / Nundo CP Reference</span><button class="expand-btn" onclick="toggleFullscreen('hundo-nundo-container', this)">⛶</button>
+
+      <!-- Hundo/Nundo Quick Reference Scroll List -->
+      <div id="hundo-nundo-container" style="display: none; margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-light);">
+        <div class="card-header card-header-flex" style="margin-bottom: 8px; font-size: 10px; color: var(--text-muted);">
+          <span>Hundo / Nundo CP Reference</span>
+          <button class="expand-btn" onclick="toggleFullscreen('hundo-nundo-container', this)">⛶ Expand</button>
         </div>
         <div id="quick-cp-list" class="scrollable-cp-list"></div>
       </div>
     </div>
-    <div id="caught-inputs" class="card" style="display:none">
+
+    <!-- Inputs for ALREADY CAUGHT mode -->
+    <div id="caught-inputs" class="card" style="display: none;">
       <div class="card-header">Exact Stats</div>
-      <div class="exact-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-        <div><label class="input-label">Lvl</label><input type="number" class="box-input" id="caught-level" min="1" max="50" step="0.5" value="15" style="text-align:center"></div>
-        <div><label class="input-label">Atk</label><input type="number" class="box-input" id="caught-atk" min="0" max="15" value="15" style="text-align:center"></div>
-        <div><label class="input-label">Def</label><input type="number" class="box-input" id="caught-def" min="0" max="15" value="15" style="text-align:center"></div>
-        <div><label class="input-label">Sta</label><input type="number" class="box-input" id="caught-sta" min="0" max="15" value="15" style="text-align:center"></div>
+      
+      <!-- Compact 4-Column Grid for Mobile -->
+      <div class="exact-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;">
+        <div>
+          <label class="input-label">Lvl</label>
+          <input type="number" class="box-input" id="caught-level" min="1" max="50" step="0.5" value="15" style="text-align:center;">
+        </div>
+        <div>
+          <label class="input-label">Atk</label>
+          <input type="number" class="box-input" id="caught-atk" min="0" max="15" value="15" style="text-align:center;">
+        </div>
+        <div>
+          <label class="input-label">Def</label>
+          <input type="number" class="box-input" id="caught-def" min="0" max="15" value="15" style="text-align:center;">
+        </div>
+        <div>
+          <label class="input-label">Sta</label>
+          <input type="number" class="box-input" id="caught-sta" min="0" max="15" value="15" style="text-align:center;">
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- COLUMN 2: ANALYSIS (PvE + PvP Combined) -->
   <div class="col-middle">
     <div class="card" id="pvp-card">
-      <div class="card-header card-header-flex"><span>Analysis & Rankings</span><button class="expand-btn" onclick="toggleFullscreen('pvp-card', this)">⛶</button></div>
-      <div id="pve-results"><div class="compact-pve-bar" style="justify-content:center;color:var(--text-muted)">Select a Pokémon to view PvE base stats.</div></div>
+      <div class="card-header card-header-flex">
+        <span>Analysis & Rankings</span>
+        <button class="expand-btn" onclick="toggleFullscreen('pvp-card', this)">⛶ Expand</button>
+      </div>
+      
+      <!-- Compact PvE Bar -->
+      <div id="pve-results">
+        <div class="compact-pve-bar" style="justify-content: center; color: var(--text-muted);">
+          Select a Pokémon to view PvE base stats.
+        </div>
+      </div>
+
       <table class="results-table">
-        <thead><tr><th>League</th><th>Max %</th><th>IVs</th><th>Lvl</th><th class="hide-mobile">Prod</th></tr></thead>
-        <tbody id="pvp-results-body"><tr><td colspan="5" class="placeholder-text">Awaiting input...</td></tr></tbody>
+        <thead>
+          <tr>
+            <th>League</th>
+            <th>Max %</th>
+            <th>IVs</th>
+            <th>Lvl</th>
+            <th class="hide-mobile">Prod</th>
+          </tr>
+        </thead>
+        <tbody id="pvp-results-body">
+          <tr><td colspan="5" class="placeholder-text">Awaiting input...</td></tr>
+        </tbody>
       </table>
     </div>
   </div>
 
+  <!-- COLUMN 3: POSSIBILITIES -->
   <div class="col-right">
-    <div class="card" id="card-possibilities" style="display:flex;flex-direction:column;height:100%;box-sizing:border-box">
-      <div class="card-header card-header-flex"><span>IV Probabilities</span><button class="expand-btn" onclick="toggleFullscreen('card-possibilities', this)">⛶</button></div>
+    <div class="card" id="card-possibilities" style="display:flex; flex-direction:column; height: 100%; box-sizing: border-box;">
+      <div class="card-header card-header-flex">
+        <span>IV Probabilities</span>
+        <button class="expand-btn" onclick="toggleFullscreen('card-possibilities', this)">⛶ Expand</button>
+      </div>
       <div id="hundo-nundo-alert"></div>
-      <div id="results" style="flex:1"><div class="placeholder-text">Enter CP to evaluate...</div></div>
+      <div id="results" style="flex: 1;">
+        <div class="placeholder-text">Enter CP to evaluate...</div>
+      </div>
     </div>
   </div>
+
 </div>
 
 <script>
-  const CPM=[0,0.094,0.16639787,0.21573247,0.25572005,0.29024988,0.3210876,0.34921268,0.37523559,0.39956728,0.42250001,0.44310755,0.46279839,0.48168495,0.49985844,0.51739395,0.53435433,0.55079269,0.56675452,0.58227891,0.59740001,0.61215729,0.62656713,0.64065295,0.65443563,0.667934,0.68116492,0.69414365,0.70688421,0.71939909,0.7317,0.73776948,0.74378943,0.74976104,0.75568551,0.76156384,0.76739717,0.7731865,0.77893275,0.78463697,0.79030001,0.79530001,0.8003,0.8053,0.8103,0.81529999,0.82029999,0.82529999,0.83029999,0.83529999,0.84029999];
-  const getCPM = l => Number.isInteger(l) ? CPM[l] : Math.ceil(l)>50 ? CPM[50] : Math.sqrt((CPM[Math.floor(l)]**2+CPM[Math.ceil(l)]**2)/2);
+  // Base integer levels (1 to 50)
+  const CPM_BASE = [
+    0, 0.094, 0.16639787, 0.21573247, 0.25572005, 0.29024988, 0.3210876, 0.34921268, 0.37523559, 0.39956728, 
+    0.42250001, 0.44310755, 0.46279839, 0.48168495, 0.49985844, 0.51739395, 0.53435433, 0.55079269, 0.56675452, 0.58227891, 
+    0.59740001, 0.61215729, 0.62656713, 0.64065295, 0.65443563, 0.667934, 0.68116492, 0.69414365, 0.70688421, 0.71939909, 
+    0.7317, 0.73776948, 0.74378943, 0.74976104, 0.75568551, 0.76156384, 0.76739717, 0.7731865, 0.77893275, 0.78463697, 
+    0.79030001, 0.79530001, 0.8003, 0.8053, 0.8103, 0.81529999, 0.82029999, 0.82529999, 0.83029999, 0.83529999, 
+    0.84029999
+  ];
 
-  window.toggleFullscreen = (id, btn) => {
-    const isFull = document.getElementById(id).classList.toggle('is-fullscreen');
-    document.body.style.overflow = isFull ? 'hidden' : 'auto';
-    btn.innerHTML = isFull ? '✖' : '⛶';
+  function getCPM(level) {
+    if (Number.isInteger(level)) return CPM_BASE[level];
+    let lower = Math.floor(level);
+    let upper = Math.ceil(level);
+    if (upper > 50) return CPM_BASE[50]; 
+    return Math.sqrt((Math.pow(CPM_BASE[lower], 2) + Math.pow(CPM_BASE[upper], 2)) / 2);
+  }
+
+  // --- FULLSCREEN TOGGLE ---
+  window.toggleFullscreen = function(elId, btn) {
+    const el = document.getElementById(elId);
+    const isFull = el.classList.toggle('is-fullscreen');
+    
+    if (isFull) {
+      document.body.style.overflow = 'hidden';
+      btn.innerHTML = '✖ Close';
+    } else {
+      document.body.style.overflow = 'auto';
+      btn.innerHTML = '⛶ Expand';
+    }
   };
 
-  let pokeData={}, pokeNames=[], evoData={}, cachedRanks={}, isCaughtMode=!1, curMatches=[], selMatch=null;
+  let pokeData = {};
+  let pokemonNames = [];
+  let evoData = {}; 
+  let cachedRanks = {}; 
+  
+  let isCaughtMode = false;
+  let currentMatches = [];
+  let selectedMatch = null;
+  
   const ui = {
-    poke: document.getElementById('pokemon'), clearBtn: document.getElementById('clear-search'),
-    list: document.getElementById('autocomplete-list'), related: document.getElementById('related-pokemon'),
-    cp: document.getElementById('cp'), weather: document.getElementById('weather'),
-    slider: document.getElementById('levelSlider'), slack: document.getElementById('levelSlack'),
-    levelDisp: document.getElementById('levelDisplay'), results: document.getElementById('results'),
-    pveResults: document.getElementById('pve-results'), pvpBody: document.getElementById('pvp-results-body'),
-    cLevel: document.getElementById('caught-level'), cAtk: document.getElementById('caught-atk'),
-    cDef: document.getElementById('caught-def'), cSta: document.getElementById('caught-sta'),
-    trainerLevel: document.getElementById('trainerLevel'), alertBox: document.getElementById('hundo-nundo-alert')
+    poke: document.getElementById('pokemon'),
+    clearBtn: document.getElementById('clear-search'),
+    list: document.getElementById('autocomplete-list'),
+    related: document.getElementById('related-pokemon'),
+    cp: document.getElementById('cp'),
+    weather: document.getElementById('weather'),
+    slider: document.getElementById('levelSlider'),
+    slack: document.getElementById('levelSlack'),
+    levelDisp: document.getElementById('levelDisplay'),
+    results: document.getElementById('results'),
+    pveResults: document.getElementById('pve-results'),
+    pvpBody: document.getElementById('pvp-results-body'),
+    
+    cLevel: document.getElementById('caught-level'),
+    cAtk: document.getElementById('caught-atk'),
+    cDef: document.getElementById('caught-def'),
+    cSta: document.getElementById('caught-sta'),
+
+    trainerLevel: document.getElementById('trainerLevel'),
+    alertBox: document.getElementById('hundo-nundo-alert')
   };
 
-  ['savedTrainerLevel','savedLevelSlack'].forEach(k => {
-    const el = k==='savedTrainerLevel'?ui.trainerLevel:ui.slack;
-    if(localStorage.getItem(k)) el.value = localStorage.getItem(k);
-    el.addEventListener(k==='savedLevelSlack'?'change':'input', function(){
-      localStorage.setItem(k, this.value);
-      if(k==='savedLevelSlack'){ updateSliderVis(); calcMatches(); }
-    });
+  // --- LOCAL STORAGE ---
+  if (localStorage.getItem('savedTrainerLevel')) {
+    ui.trainerLevel.value = localStorage.getItem('savedTrainerLevel');
+  }
+  ui.trainerLevel.addEventListener('input', function() {
+    localStorage.setItem('savedTrainerLevel', this.value);
+  });
+
+  if (localStorage.getItem('savedLevelSlack')) {
+    ui.slack.value = localStorage.getItem('savedLevelSlack');
+  }
+  ui.slack.addEventListener('change', function() {
+    localStorage.setItem('savedLevelSlack', this.value);
+    updateSliderVisuals();
+    calculateMatches();
   });
 
   async function loadData() {
     try {
-      const [sRes, eRes] = await Promise.all([fetch('https://pogoapi.net/api/v1/pokemon_stats.json'), fetch('https://pogoapi.net/api/v1/pokemon_evolutions.json')]);
-      const [stats, evos] = await Promise.all([sRes.json(), eRes.json()]);
-      const rx = /alola|galar|hisui|paldea|origin|altered|therian|incarnate|attack|defense|speed|standard|zen|black|white|resolute|pirouette|confined|unbound|midday|midnight|dusk|10%|50%|complete|dawn|ultra|amped|low.?key|single|rapid|shadow|hero|roaming|bloodmoon|small|average|large|super|mega|primal|crowned|normal/i;
-      
+      const [statsRes, evoRes] = await Promise.all([
+        fetch('https://pogoapi.net/api/v1/pokemon_stats.json'),
+        fetch('https://pogoapi.net/api/v1/pokemon_evolutions.json')
+      ]);
+      const stats = await statsRes.json();
+      const evolutionsRaw = await evoRes.json();
+
+      // STRICT WHITELIST APPROACH: Excludes all purely cosmetic forms/costumes. Keeps stat-altering variants.
+      const validFormsRegex = /alola|galar|hisui|paldea|origin|altered|therian|incarnate|attack|defense|speed|standard|zen|black|white|resolute|pirouette|confined|unbound|midday|midnight|dusk|10%|50%|complete|dawn|ultra|amped|low.?key|single|rapid|shadow|hero|roaming|bloodmoon|small|average|large|super|mega|primal|crowned|normal/i;
+
       stats.forEach(p => {
-        let n=p.pokemon_name;
-        if(p.form&&p.form!=='Normal'){ if(!rx.test(p.form))return; n=`${n} (${p.form})`; }
-        pokeData[n] = { id:p.pokemon_id, atk:p.base_attack, def:p.base_defense, sta:p.base_stamina };
+        let name = p.pokemon_name;
+        if (p.form && p.form !== 'Normal') {
+          if (!validFormsRegex.test(p.form)) return; 
+          name = `${p.pokemon_name} (${p.form})`;
+        }
+        pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
       });
-      evos.forEach(p => {
-        let bn=p.pokemon_name;
-        if(p.form&&p.form!=='Normal'){ if(!rx.test(p.form))return; bn=`${bn} (${p.form})`; }
-        if(!evoData[bn]) evoData[bn] = [];
+
+      evolutionsRaw.forEach(p => {
+        let baseName = p.pokemon_name;
+        if (p.form && p.form !== 'Normal') {
+          if (!validFormsRegex.test(p.form)) return;
+          baseName = `${p.pokemon_name} (${p.form})`;
+        }
+        
+        if (!evoData[baseName]) evoData[baseName] = [];
+        
         p.evolutions.forEach(e => {
-          let en=e.pokemon_name;
-          if(e.form&&e.form!=='Normal'){ if(!rx.test(e.form))return; en=`${en} (${e.form})`; }
-          if(!evoData[bn].includes(en)) evoData[bn].push(en);
+          let evoName = e.pokemon_name;
+          if (e.form && e.form !== 'Normal') {
+            if (!validFormsRegex.test(e.form)) return;
+            evoName = `${e.pokemon_name} (${e.form})`;
+          }
+          if (!evoData[baseName].includes(evoName)) {
+            evoData[baseName].push(evoName);
+          }
         });
       });
-      pokeNames = Object.keys(pokeData).sort();
-    } catch(e) { ui.results.innerHTML = "<div class='placeholder-text'>Error loading API data.</div>"; }
+
+      pokemonNames = Object.keys(pokeData).sort();
+    } catch(e) {
+      ui.results.innerHTML = "<div class='placeholder-text'>Error loading API data. Please check your internet connection.</div>";
+    }
   }
 
-  window.setMode = m => {
-    isCaughtMode = (m==='caught');
+  // --- MODE TOGGLER ---
+  window.setMode = function(mode) {
+    isCaughtMode = (mode === 'caught');
     document.getElementById('btn-wild').classList.toggle('active', !isCaughtMode);
     document.getElementById('btn-caught').classList.toggle('active', isCaughtMode);
-    document.getElementById('wild-inputs').style.display = isCaughtMode?'none':'block';
-    document.getElementById('caught-inputs').style.display = isCaughtMode?'block':'none';
-    document.getElementById('card-possibilities').style.display = isCaughtMode?'none':'flex';
-    calcMatches();
+    
+    document.getElementById('wild-inputs').style.display = isCaughtMode ? 'none' : 'block';
+    document.getElementById('caught-inputs').style.display = isCaughtMode ? 'block' : 'none';
+    
+    document.getElementById('card-possibilities').style.display = isCaughtMode ? 'none' : 'flex';
+    
+    calculateMatches();
   };
 
-  ui.clearBtn.onclick = () => {
-    ui.poke.value = ''; ui.list.innerHTML = ''; ui.clearBtn.style.display = 'none'; ui.poke.focus();
-    ui.related.innerHTML = ''; ui.pveResults.innerHTML = `<div class="compact-pve-bar" style="justify-content:center;color:var(--text-muted)">Select a Pokémon to view PvE base stats.</div>`;
+  // --- SEARCH CLEAR BUTTON ---
+  ui.clearBtn.addEventListener('click', function() {
+    ui.poke.value = '';
+    ui.list.innerHTML = '';
+    this.style.display = 'none';
+    ui.poke.focus();
+    
+    // Clear the active analysis UI
+    ui.related.innerHTML = '';
+    ui.pveResults.innerHTML = `<div class="compact-pve-bar" style="justify-content: center; color: var(--text-muted);">Select a Pokémon to view PvE base stats.</div>`;
     ui.pvpBody.innerHTML = `<tr><td colspan="5" class="placeholder-text">Awaiting input...</td></tr>`;
     ui.results.innerHTML = `<div class="placeholder-text">Enter CP to evaluate...</div>`;
-    ui.alertBox.innerHTML = ''; document.getElementById('hundo-nundo-container').style.display = 'none';
-  };
-
-  window.selectPoke = n => { ui.poke.value=n; ui.list.innerHTML=''; ui.clearBtn.style.display='block'; calcMatches(); };
-
-  ui.poke.addEventListener('input', function(){
-    let v = this.value; ui.list.innerHTML = ''; ui.clearBtn.style.display = v?'block':'none';
-    if(!v) return;
-    pokeNames.filter(n => n.toLowerCase().includes(v.toLowerCase())).slice(0,8).forEach(n => {
-      let d = document.createElement("div");
-      d.innerHTML = n.replace(new RegExp(`(${v})`,"gi"), "<strong>$1</strong>");
-      d.onclick = () => selectPoke(n); ui.list.appendChild(d);
-    });
-    calcMatches();
+    ui.alertBox.innerHTML = '';
+    document.getElementById('hundo-nundo-container').style.display = 'none';
   });
 
-  document.addEventListener("click", e => { if(e.target!==ui.poke && e.target!==ui.clearBtn) ui.list.innerHTML=''; });
-
-  const updateSliderVis = () => {
-    let l = parseInt(ui.slider.value); ui.levelDisp.innerText = `Lvl ${l}`;
-    ui.slider.style.setProperty('--thumb-color', `hsl(${120-((l-1)/49)*120}, 100%, 50%)`);
-  };
-  updateSliderVis();
-  ui.slider.addEventListener('input', () => { updateSliderVis(); calcMatches(); });
-
-  const calcCP = (ba,bd,bs,ia,id,is,c) => Math.max(10, Math.floor(((ba+ia)*Math.sqrt(bd+id)*Math.sqrt(bs+is)*c**2)/10));
-  const getSP = (ba,bd,bs,ia,id,is,c) => Math.round((ba+ia)*c*(bd+id)*c*Math.floor((bs+is)*c));
-
-  const getRanks = (n, d) => {
-    if(cachedRanks[n]) return cachedRanks[n];
-    let b = { LC:{sp:0}, GL:{sp:0}, UL:{sp:0}, ML:{a:15,d:15,s:15,level:50,sp:getSP(d.atk,d.def,d.sta,15,15,15,getCPM(50))} };
-    for(let a=0;a<=15;a++)for(let df=0;df<=15;df++)for(let s=0;s<=15;s++)for(let l=1;l<=50;l+=0.5){
-      let cp=calcCP(d.atk,d.def,d.sta,a,df,s,getCPM(l)), sp=getSP(d.atk,d.def,d.sta,a,df,s,getCPM(l));
-      if(cp<=500&&sp>b.LC.sp) b.LC={a,d:df,s,level:l,sp};
-      if(cp<=1500&&sp>b.GL.sp) b.GL={a,d:df,s,level:l,sp};
-      if(cp<=2500&&sp>b.UL.sp) b.UL={a,d:df,s,level:l,sp};
-      if(cp>2500) break;
-    }
-    return (cachedRanks[n]=b);
+  // --- AUTOCOMPLETE ---
+  window.selectPokemon = function(name) {
+    ui.poke.value = name;
+    ui.list.innerHTML = '';
+    ui.clearBtn.style.display = 'block';
+    calculateMatches();
   };
 
-  const getBestIV = (ba,bd,bs,ia,id,is,cap,minL) => {
-    let bl=0, ms=0;
-    for(let l=minL;l<=50;l+=0.5){
-      if(calcCP(ba,bd,bs,ia,id,is,getCPM(l))<=cap){
-        let sp=getSP(ba,bd,bs,ia,id,is,getCPM(l)); if(sp>ms){ms=sp;bl=l;}
-      } else break;
-    }
-    return {sp:ms,level:bl};
-  };
-
-  const getEvos = n => {
-    let f=[], v=new Set();
-    const t=cn=>{ if(v.has(cn))return; v.add(cn); let ev=evoData[cn]; if(!ev||!ev.length){ if(cn!==n)f.push(cn); }else ev.forEach(t); };
-    t(n); return [...new Set(f)].filter(x=>pokeData[x]);
-  };
-
-  const rRow1 = (lg, r) => `<tr><td><strong>${lg}</strong></td><td class="perfect-iv"><strong>100%</strong></td><td>${r.a}/${r.d}/${r.s}</td><td>${r.level}</td><td class="hide-mobile">${r.sp.toLocaleString()}</td></tr>`;
-  const rRowO = (lg, b, r1) => b.sp===0 ? `<tr><td><strong>${lg}</strong></td><td colspan="4" style="color:var(--text-muted);font-size:10px;font-style:italic">Exceeds CP Cap</td></tr>` : `<tr><td><strong>${lg}</strong></td><td class="${b.sp===r1.sp?'perfect-iv':''}"><strong>${((b.sp/r1.sp)*100).toFixed(1)}%</strong></td><td>${b.iv.a}/${b.iv.d}/${b.iv.s}</td><td>${b.level}</td><td class="hide-mobile">${b.sp.toLocaleString()}</td></tr>`;
-
-  const renderPVE = (n, d) => {
-    let fh="", fms=Object.keys(pokeData).filter(k=>pokeData[k].id===d.id&&k!==n), evs=evoData[n]||[], pevs=Object.keys(evoData).filter(k=>evoData[k].includes(n));
-    const mt=(l,p,c)=>`<span class="related-tag ${c}" onclick="selectPoke('${p.replace(/'/g,"\\'")}')">${l}: ${p}</span>`;
-    pevs.forEach(p=>fh+=mt("From",p,"")); evs.forEach(p=>fh+=mt("Evolves to",p,"tag-evo")); fms.forEach(p=>fh+=mt("Form",p,"tag-form"));
-    ui.related.innerHTML = fh?`<div class="related-container">${fh}</div>`:"";
-    let pve = d.atk>=250?"<span style='color:#15803d;font-weight:700'>Top-Tier Attacker</span>":d.atk>=200?"<span style='color:#0369a1;font-weight:700'>Strong Attacker</span>":d.atk>=150?"<span style='color:#b45309;font-weight:700'>Average Attacker</span>":"<span style='color:#be123c;font-weight:700'>Not Recommended</span>";
-    ui.pveResults.innerHTML = `<div class="compact-pve-bar"><div><strong>A:</strong> ${d.atk} | <strong>D:</strong> ${d.def} | <strong>S:</strong> ${d.sta}</div><div>${pve} <a href="https://db.pokemongohub.net/pokemon/${d.id}" target="_blank" style="margin-left:4px;color:var(--primary-blue);text-decoration:none">&rarr;</a></div></div>`;
-  };
-
-  const renderCPs = d => {
-    let c=document.getElementById('hundo-nundo-container'), lst=document.getElementById('quick-cp-list');
-    if(!d||isCaughtMode) return c.style.display='none';
-    c.style.display='block'; lst.innerHTML='';
-    let sl=Math.min(35, parseInt(ui.slider.value)), opts=[];
-    for(let l=1;l<=35;l++){
-      let cpm=getCPM(l), t=`<strong>Lvl ${l}</strong> | 100%: ${calcCP(d.atk,d.def,d.sta,15,15,15,cpm)}`, w=calcCP(d.atk,d.def,d.sta,4,4,4,cpm), n=calcCP(d.atk,d.def,d.sta,0,0,0,cpm);
-      if(l<=3)t+=` | 0%: ${n}`; else if(l<=30)t+=` | 0%: ${n} | WB Min: ${w}`; else t+=` | WB Min: ${w}`;
-      opts.push({l,t});
-    }
-    let ti=opts.findIndex(o=>o.l===sl); if(ti>-1){ opts.unshift({...opts[ti], t:opts[ti].t+'<span class="slider-pill">Slider Level</span>', hi:!0}); }
-    opts.forEach(o=>{ let div=document.createElement('div'); div.className='cp-list-item'+(o.hi?' highlight':''); div.innerHTML=o.t; lst.appendChild(div); });
-  };
-
-  const renderEmpty = (n, d) => {
-    let r=getRanks(n,d); ui.pvpBody.innerHTML = (r.LC.sp>0?rRow1("Little Cup",r.LC):"")+(r.GL.sp>0?rRow1("Great League",r.GL):"")+(r.UL.sp>0?rRow1("Ultra League",r.UL):"")+rRow1("Master League",r.ML);
-  };
-
-  const renderList = () => {
-    if(isCaughtMode) return;
-    if(!curMatches.length) return ui.results.innerHTML=`<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} at the selected levels.</strong><br>Try adjusting the slider slack or color.</div>`;
-    let st=ui.slack.value==='all'?'(All Levels)':`(±${ui.slack.value})`, ho=`<div style="margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text-muted);display:flex;justify-content:space-between"><span>${curMatches.length} MATCHES ${st}</span><span style="font-style:italic;font-weight:400">Tap to isolate</span></div><div class="scrollable-matches">`;
-    curMatches.forEach(m => { ho+=`<div class="match-row ${selMatch?.id===m.id?'selected-row':''} ${m.total==="100.0"?'perfect-iv':''}" data-id="${m.id}" onclick="selectMatch('${m.id}')"><span>Lvl ${m.level}</span><span>${m.a}/${m.d}/${m.s}</span><span>${m.total}%</span></div>`; });
-    ui.results.innerHTML = ho+`</div>`;
-  };
-
-  const renderTab = (n, d) => {
-    if(!curMatches.length) return ui.pvpBody.innerHTML=`<tr><td colspan="5" class="placeholder-text" style="padding:20px">No valid combinations found.</td></tr>`;
-    let rs=getRanks(n,d), mus=selMatch?[selMatch]:curMatches, bL={sp:0}, bG={sp:0}, bU={sp:0}, bM={sp:0};
-    mus.forEach(m=>{
-      let l=getBestIV(d.atk,d.def,d.sta,m.a,m.d,m.s,500,m.level); if(l.sp>bL.sp)bL={iv:m,...l};
-      let g=getBestIV(d.atk,d.def,d.sta,m.a,m.d,m.s,1500,m.level); if(g.sp>bG.sp)bG={iv:m,...g};
-      let u=getBestIV(d.atk,d.def,d.sta,m.a,m.d,m.s,2500,m.level); if(u.sp>bU.sp)bU={iv:m,...u};
-      let ml=getBestIV(d.atk,d.def,d.sta,m.a,m.d,m.s,10000,m.level); if(ml.sp>bM.sp)bM={iv:m,...ml};
+  ui.poke.addEventListener('input', function() {
+    let val = this.value;
+    ui.list.innerHTML = ''; 
+    ui.clearBtn.style.display = val.length > 0 ? 'block' : 'none';
+    
+    if (!val) return;
+    
+    let matches = pokemonNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
+    
+    matches.forEach(name => {
+      let item = document.createElement("div");
+      let regex = new RegExp(`(${val})`, "gi");
+      item.innerHTML = name.replace(regex, "<strong>$1</strong>");
+      item.addEventListener("click", () => selectPokemon(name));
+      ui.list.appendChild(item);
     });
-    let fh=(rs.LC.sp>0?rRowO("Little",bL,rs.LC):"")+(rs.GL.sp>0?rRowO("Great",bG,rs.GL):"")+(rs.UL.sp>0?rRowO("Ultra",bU,rs.UL):"")+rRowO("Master",bM,rs.ML);
-    getEvos(n).slice(0,2).forEach(fn=>{
-      let fd=pokeData[fn]; if(!fd)return;
-      let fr=getRanks(fn,fd), fbG={sp:0}, fbU={sp:0}, fbM={sp:0};
-      mus.forEach(m=>{
-        let g=getBestIV(fd.atk,fd.def,fd.sta,m.a,m.d,m.s,1500,m.level); if(g.sp>fbG.sp)fbG={iv:m,...g};
-        let u=getBestIV(fd.atk,fd.def,fd.sta,m.a,m.d,m.s,2500,m.level); if(u.sp>fbU.sp)fbU={iv:m,...u};
-        let ml=getBestIV(fd.atk,fd.def,fd.sta,m.a,m.d,m.s,10000,m.level); if(ml.sp>fbM.sp)fbM={iv:m,...ml};
-      });
-      let eG=fr.GL.sp>0?rRowO("Great",fbG,fr.GL):"", eU=fr.UL.sp>0?rRowO("Ultra",fbU,fr.UL):"", eM=rRowO("Master",fbM,fr.ML);
-      if(eG||eU||eM) fh+=`<tr><td colspan="5" class="evo-header">If Evolved to ${fn}</td></tr>`+eG+eU+eM;
-    });
-    ui.pvpBody.innerHTML = fh;
-  };
+    calculateMatches();
+  });
 
-  window.selectMatch = id => {
-    selMatch = selMatch?.id===id?null:curMatches.find(m=>m.id===id);
-    document.querySelectorAll('.match-row').forEach(r=>r.classList.toggle('selected-row', r.dataset.id===(selMatch?selMatch.id:'')));
-    renderTab(ui.poke.value, pokeData[ui.poke.value]);
-  };
+  document.addEventListener("click", function (e) {
+    if (e.target !== ui.poke && e.target !== ui.clearBtn) ui.list.innerHTML = '';
+  });
 
-  function calcMatches() {
-    let n=ui.poke.value, d=pokeData[n]; if(!d)return;
-    renderPVE(n, d); renderCPs(d); curMatches=[]; ui.alertBox.innerHTML='';
-    if(isCaughtMode){
-      let l=parseFloat(ui.cLevel.value)||1, a=parseInt(ui.cAtk.value)||0, df=parseInt(ui.cDef.value)||0, s=parseInt(ui.cSta.value)||0;
-      curMatches.push({a,d:df,s,level:l,total:((a+df+s)/45*100).toFixed(1),id:`caught-${l}-${a}-${df}-${s}`});
-      selMatch=curMatches[0]; renderTab(n,d); return;
-    }
-    let cpi=parseInt(ui.cp.value), bl=parseInt(ui.slider.value), sv=ui.slack.value;
-    if(!cpi) { ui.results.innerHTML="<div class='placeholder-text'>Enter CP to evaluate possibilities...</div>"; return renderEmpty(n,d); }
-    let mi=ui.weather.checked?4:0, ml=sv!=='all'?Math.max(1,bl-parseInt(sv)):1, xl=sv!=='all'?Math.min(50,bl+parseInt(sv)):50;
-    for(let l=ml;l<=xl;l++){
-      let cpm=getCPM(l);
-      for(let a=mi;a<=15;a++)for(let df=mi;df<=15;df++)for(let s=mi;s<=15;s++)
-        if(calcCP(d.atk,d.def,d.sta,a,df,s,cpm)===cpi) curMatches.push({a,d:df,s,level:l,total:((a+df+s)/45*100).toFixed(1),id:`${l}-${a}-${df}-${s}`});
-    }
-    curMatches.sort((x,y)=>y.total!==x.total?y.total-x.total:Math.abs(x.level-bl)-Math.abs(y.level-bl));
-    if(curMatches.length){
-      let hh=curMatches.some(m=>m.total==="100.0"), hn=curMatches.some(m=>m.total==="0.0");
-      if(hh&&hn) ui.alertBox.innerHTML=`<div class="hn-alert hn-both">⚠️ Hundo & Nundo Possible at this CP!</div>`;
-      else if(hh) ui.alertBox.innerHTML=`<div class="hn-alert hn-hundo">🌟 HUNDO Possible at this CP! (100%)</div>`;
-      else if(hn) ui.alertBox.innerHTML=`<div class="hn-alert hn-nundo">💀 NUNDO Possible at this CP! (0%)</div>`;
-    }
-    selMatch=null; renderList(); renderTab(n,d);
+  function updateSliderVisuals() {
+    let level = parseInt(ui.slider.value);
+    ui.levelDisp.innerText = `Lvl ${level}`;
+    let hue = 120 - ((level - 1) / 49) * 120;
+    ui.slider.style.setProperty('--thumb-color', `hsl(${hue}, 100%, 50%)`);
+  }
+  
+  updateSliderVisuals();
+  ui.slider.addEventListener('input', function() {
+    updateSliderVisuals();
+    calculateMatches();
+  });
+
+  // --- MATH FUNCTIONS ---
+  function calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
+    let atk = parseInt(baseAtk) + ivA;
+    let def = parseInt(baseDef) + ivD;
+    let sta = parseInt(baseSta) + ivS;
+    let cp = (atk * Math.sqrt(def) * Math.sqrt(sta) * Math.pow(cpm, 2)) / 10;
+    return Math.max(10, Math.floor(cp));
   }
 
-  [ui.cp, ui.weather, ui.cLevel, ui.cAtk, ui.cDef, ui.cSta].forEach(el=>el.addEventListener('input', calcMatches));
+  function getStatProduct(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm) {
+    let atk = (baseAtk + ivA) * cpm;
+    let def = (baseDef + ivD) * cpm;
+    let sta = Math.floor((baseSta + ivS) * cpm);
+    return Math.round(atk * def * sta);
+  }
+
+  function getSpeciesRanks(name, data) {
+    if (cachedRanks[name]) return cachedRanks[name];
+    let best = { LC: {sp: 0}, GL: {sp: 0}, UL: {sp: 0} };
+
+    for (let a = 0; a <= 15; a++) {
+      for (let d = 0; d <= 15; d++) {
+        for (let s = 0; s <= 15; s++) {
+          for (let lvl = 1; lvl <= 50; lvl += 0.5) {
+            let cpm = getCPM(lvl);
+            let cp = calculateCP(data.atk, data.def, data.sta, a, d, s, cpm);
+            let sp = getStatProduct(data.atk, data.def, data.sta, a, d, s, cpm);
+            
+            if (cp <= 500 && sp > best.LC.sp) best.LC = { a, d, s, level: lvl, sp };
+            if (cp <= 1500 && sp > best.GL.sp) best.GL = { a, d, s, level: lvl, sp };
+            if (cp <= 2500 && sp > best.UL.sp) best.UL = { a, d, s, level: lvl, sp };
+            if (cp > 2500) break; 
+          }
+        }
+      }
+    }
+    
+    let mlSp = getStatProduct(data.atk, data.def, data.sta, 15, 15, 15, getCPM(50));
+    best.ML = { a: 15, d: 15, s: 15, level: 50, sp: mlSp };
+    cachedRanks[name] = best;
+    return best;
+  }
+
+  function getBestForIV(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cap, minLevel) {
+    let bestLevel = 0, maxSp = 0;
+    for (let lvl = minLevel; lvl <= 50; lvl += 0.5) {
+      let cpm = getCPM(lvl);
+      let cp = calculateCP(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm);
+      if (cp <= cap) {
+        let sp = getStatProduct(baseAtk, baseDef, baseSta, ivA, ivD, ivS, cpm);
+        if (sp > maxSp) { maxSp = sp; bestLevel = lvl; }
+      } else { break; }
+    }
+    return { sp: maxSp, level: bestLevel };
+  }
+
+  function getFinalEvolutions(name) {
+    let finals = [];
+    let visited = new Set();
+    function traverse(currName) {
+      if (visited.has(currName)) return;
+      visited.add(currName);
+      let evos = evoData[currName];
+      if (!evos || evos.length === 0) {
+        if (currName !== name) finals.push(currName);
+      } else {
+        evos.forEach(traverse);
+      }
+    }
+    traverse(name);
+    return [...new Set(finals)].filter(f => pokeData[f]);
+  }
+
+  // --- RENDER HELPERS ---
+  function makeRowRank1(leagueName, rank1) {
+    return `<tr>
+      <td><strong>${leagueName}</strong></td>
+      <td class="perfect-iv"><strong>100%</strong></td>
+      <td>${rank1.a}/${rank1.d}/${rank1.s}</td>
+      <td>${rank1.level}</td>
+      <td class="hide-mobile">${rank1.sp.toLocaleString()}</td>
+    </tr>`;
+  }
+
+  function makeRowObserved(leagueName, bestObserved, rank1) {
+    if (bestObserved.sp === 0) {
+      return `<tr>
+        <td><strong>${leagueName}</strong></td>
+        <td colspan="4" style="color: var(--text-muted); font-size: 10px; font-style: italic;">Exceeds CP Cap</td>
+      </tr>`;
+    }
+    let pct = ((bestObserved.sp / rank1.sp) * 100).toFixed(1);
+    let isPerfect = pct === "100.0" ? "perfect-iv" : "";
+    return `<tr>
+      <td><strong>${leagueName}</strong></td>
+      <td class="${isPerfect}"><strong>${pct}%</strong></td>
+      <td>${bestObserved.iv.a}/${bestObserved.iv.d}/${bestObserved.iv.s}</td>
+      <td>${bestObserved.level}</td>
+      <td class="hide-mobile">${bestObserved.sp.toLocaleString()}</td>
+    </tr>`;
+  }
+
+  function renderPVE(name, data) {
+    let familyHtml = "";
+    
+    let forms = Object.keys(pokeData).filter(k => pokeData[k].id === data.id && k !== name);
+    let evos = evoData[name] || [];
+    let preEvos = Object.keys(evoData).filter(k => evoData[k].includes(name));
+    
+    const makeTag = (label, pName, typeClass) => `<span class="related-tag ${typeClass}" onclick="selectPokemon('${pName.replace(/'/g, "\\'")}')">${label}: ${pName}</span>`;
+
+    if (preEvos.length) preEvos.forEach(p => familyHtml += makeTag("From", p, ""));
+    if (evos.length) evos.forEach(p => familyHtml += makeTag("Evolves to", p, "tag-evo"));
+    if (forms.length) forms.forEach(p => familyHtml += makeTag("Form", p, "tag-form"));
+    
+    let fullRelatedHtml = "";
+    if (familyHtml) fullRelatedHtml += `<div class="related-container">${familyHtml}</div>`;
+    
+    ui.related.innerHTML = fullRelatedHtml;
+
+    let pveEval = "";
+    if (data.atk >= 250) pveEval = "<span style='color: #15803d; font-weight: bold;'>Top-Tier Attacker</span>";
+    else if (data.atk >= 200) pveEval = "<span style='color: #0369a1; font-weight: bold;'>Strong Attacker</span>";
+    else if (data.atk >= 150) pveEval = "<span style='color: #b45309; font-weight: bold;'>Average Attacker</span>";
+    else pveEval = "<span style='color: #be123c; font-weight: bold;'>Not Recommended</span>";
+
+    ui.pveResults.innerHTML = `
+      <div class="compact-pve-bar">
+        <div><strong>A:</strong> ${data.atk} | <strong>D:</strong> ${data.def} | <strong>S:</strong> ${data.sta}</div>
+        <div>${pveEval} <a href="https://db.pokemongohub.net/pokemon/${data.id}" target="_blank" style="margin-left: 4px; color: var(--primary-blue); text-decoration: none;">&rarr;</a></div>
+      </div>
+    `;
+  }
+
+  function renderReferenceCPs(data) {
+    let container = document.getElementById('hundo-nundo-container');
+    let list = document.getElementById('quick-cp-list');
+    
+    if (!data || isCaughtMode) {
+      container.style.display = 'none';
+      return;
+    }
+    
+    container.style.display = 'block';
+    list.innerHTML = '';
+    
+    let sliderLevel = parseInt(ui.slider.value);
+    if (sliderLevel > 35) sliderLevel = 35; 
+    
+    let options = [];
+    for (let l = 1; l <= 35; l++) {
+      let cpm = getCPM(l);
+      let hundoCP = calculateCP(data.atk, data.def, data.sta, 15, 15, 15, cpm);
+      
+      let text = `<strong>Lvl ${l}</strong> | 100%: ${hundoCP}`;
+      
+      if (l >= 1 && l <= 3) {
+        let nundoCP = calculateCP(data.atk, data.def, data.sta, 0, 0, 0, cpm);
+        text += ` | 0%: ${nundoCP}`;
+      } else if (l >= 4 && l <= 30) {
+        let nundoCP = calculateCP(data.atk, data.def, data.sta, 0, 0, 0, cpm);
+        let wbFloorCP = calculateCP(data.atk, data.def, data.sta, 4, 4, 4, cpm);
+        text += ` | 0%: ${nundoCP} | WB Min: ${wbFloorCP}`;
+      } else if (l >= 31 && l <= 35) {
+        let wbFloorCP = calculateCP(data.atk, data.def, data.sta, 4, 4, 4, cpm);
+        text += ` | WB Min: ${wbFloorCP}`;
+      }
+      
+      options.push({ level: l, text: text });
+    }
+    
+    // Float the slider's currently selected level to the top
+    let topOptionIndex = options.findIndex(o => o.level === sliderLevel);
+    if (topOptionIndex > -1) {
+      let topOpt = { ...options[topOptionIndex] };
+      topOpt.text = topOpt.text + '<span class="slider-pill">Slider Level</span>';
+      topOpt.isHighlight = true;
+      options.unshift(topOpt);
+    }
+    
+    options.forEach((o) => {
+      let div = document.createElement('div');
+      div.className = 'cp-list-item' + (o.isHighlight ? ' highlight' : '');
+      div.innerHTML = o.text;
+      list.appendChild(div);
+    });
+  }
+
+  function renderEmptyPVP(name, data) {
+    let ranks = getSpeciesRanks(name, data);
+    let lcRow = ranks.LC.sp > 0 ? makeRowRank1("Little Cup", ranks.LC) : "";
+    let glRow = ranks.GL.sp > 0 ? makeRowRank1("Great League", ranks.GL) : "";
+    let ulRow = ranks.UL.sp > 0 ? makeRowRank1("Ultra League", ranks.UL) : "";
+    let mlRow = makeRowRank1("Master League", ranks.ML);
+    ui.pvpBody.innerHTML = lcRow + glRow + ulRow + mlRow;
+  }
+
+  function renderIVList() {
+    if (isCaughtMode) return; 
+
+    if (currentMatches.length === 0) {
+      ui.results.innerHTML = `<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} at the selected levels.</strong><br>Try adjusting the slider slack or color.</div>`;
+      return;
+    }
+
+    let slackText = ui.slack.value === 'all' ? '(All Levels)' : `(±${ui.slack.value})`;
+    let htmlOut = `<div style="margin-bottom:8px; font-size:11px; font-weight:bold; color:var(--text-muted); display:flex; justify-content:space-between;">
+        <span>${currentMatches.length} MATCHES ${slackText}</span>
+        <span style="font-style:italic; font-weight:normal;">Tap to isolate</span>
+    </div>`;
+    
+    htmlOut += `<div class="scrollable-matches"><table class="results-table" style="margin: 0;">`;
+    htmlOut += `<thead><tr><th>Lvl</th><th>IVs</th><th>%</th></tr></thead><tbody>`;
+    
+    currentMatches.forEach(m => {
+      let isPerfect = m.total === "100.0" ? "perfect-iv" : "";
+      let isSelected = (selectedMatch && selectedMatch.id === m.id) ? "selected-row" : "";
+      htmlOut += `
+        <tr class="match-row ${isSelected} ${isPerfect}" data-id="${m.id}" onclick="selectMatch('${m.id}')">
+          <td><strong>${m.level}</strong></td>
+          <td>${m.a}/${m.d}/${m.s}</td>
+          <td><strong>${m.total}%</strong></td>
+        </tr>
+      `;
+    });
+    htmlOut += `</tbody></table></div>`;
+    ui.results.innerHTML = htmlOut;
+  }
+
+  function renderPVPTable(name, data) {
+    if (currentMatches.length === 0) {
+      ui.pvpBody.innerHTML = `<tr><td colspan="5" class="placeholder-text" style="padding: 20px;">No valid combinations found.</td></tr>`;
+      return;
+    }
+
+    let ranks = getSpeciesRanks(name, data);
+    let matchesToUse = selectedMatch ? [selectedMatch] : currentMatches;
+    let bestLC = { sp: 0 }, bestGL = { sp: 0 }, bestUL = { sp: 0 }, bestML = { sp: 0 };
+    
+    matchesToUse.forEach(m => {
+       let lc = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 500, m.level);
+       if (lc.sp > bestLC.sp) bestLC = { iv: m, ...lc };
+       
+       let gl = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 1500, m.level);
+       if (gl.sp > bestGL.sp) bestGL = { iv: m, ...gl };
+       
+       let ul = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 2500, m.level);
+       if (ul.sp > bestUL.sp) bestUL = { iv: m, ...ul };
+       
+       let ml = getBestForIV(data.atk, data.def, data.sta, m.a, m.d, m.s, 10000, m.level);
+       if (ml.sp > bestML.sp) bestML = { iv: m, ...ml };
+    });
+
+    let lcRow = ranks.LC.sp > 0 ? makeRowObserved("Little", bestLC, ranks.LC) : "";
+    let glRow = ranks.GL.sp > 0 ? makeRowObserved("Great", bestGL, ranks.GL) : "";
+    let ulRow = ranks.UL.sp > 0 ? makeRowObserved("Ultra", bestUL, ranks.UL) : "";
+    let mlRow = makeRowObserved("Master", bestML, ranks.ML);
+    
+    let finalHtml = lcRow + glRow + ulRow + mlRow;
+
+    // --- SIMULATED EVOLUTION PROJECTION ---
+    let finals = getFinalEvolutions(name).slice(0, 2); 
+    finals.forEach(fName => {
+      let fData = pokeData[fName];
+      if(!fData) return;
+      
+      let fRanks = getSpeciesRanks(fName, fData);
+      let bestF_GL = { sp: 0 }, bestF_UL = { sp: 0 }, bestF_ML = { sp: 0 };
+      
+      matchesToUse.forEach(m => {
+        let gl = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 1500, m.level);
+        if (gl.sp > bestF_GL.sp) bestF_GL = { iv: m, ...gl };
+        
+        let ul = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 2500, m.level);
+        if (ul.sp > bestF_UL.sp) bestF_UL = { iv: m, ...ul };
+        
+        let ml = getBestForIV(fData.atk, fData.def, fData.sta, m.a, m.d, m.s, 10000, m.level);
+        if (ml.sp > bestF_ML.sp) bestF_ML = { iv: m, ...ml };
+      });
+
+      let e_glRow = fRanks.GL.sp > 0 ? makeRowObserved("Great", bestF_GL, fRanks.GL) : "";
+      let e_ulRow = fRanks.UL.sp > 0 ? makeRowObserved("Ultra", bestF_UL, fRanks.UL) : "";
+      let e_mlRow = makeRowObserved("Master", bestF_ML, fRanks.ML);
+      
+      if (e_glRow || e_ulRow || e_mlRow) {
+        finalHtml += `<tr><td colspan="5" class="evo-header">If Evolved to ${fName}</td></tr>`;
+        finalHtml += e_glRow + e_ulRow + e_mlRow;
+      }
+    });
+
+    ui.pvpBody.innerHTML = finalHtml;
+  }
+
+  // --- SELECTION & CALCULATION ---
+  window.selectMatch = function(id) {
+    if (selectedMatch && selectedMatch.id === id) {
+      selectedMatch = null; 
+    } else {
+      selectedMatch = currentMatches.find(m => m.id === id);
+    }
+    
+    document.querySelectorAll('.match-row').forEach(row => {
+      if (row.dataset.id === (selectedMatch ? selectedMatch.id : '')) {
+        row.classList.add('selected-row');
+      } else {
+        row.classList.remove('selected-row');
+      }
+    });
+    
+    renderPVPTable(ui.poke.value, pokeData[ui.poke.value]);
+  }
+
+  function calculateMatches() {
+    let name = ui.poke.value;
+    let data = pokeData[name];
+    if (!data) return; 
+
+    renderPVE(name, data);
+    renderReferenceCPs(data);
+    currentMatches = [];
+    ui.alertBox.innerHTML = '';
+
+    // ALREADY CAUGHT MODE LOGIC
+    if (isCaughtMode) {
+      let l = parseFloat(ui.cLevel.value) || 1;
+      let a = parseInt(ui.cAtk.value) || 0;
+      let d = parseInt(ui.cDef.value) || 0;
+      let s = parseInt(ui.cSta.value) || 0;
+      
+      currentMatches.push({
+        a, d, s, level: l, 
+        total: ((a + d + s) / 45 * 100).toFixed(1),
+        id: `caught-${l}-${a}-${d}-${s}`
+      });
+      
+      selectedMatch = currentMatches[0];
+      renderPVPTable(name, data);
+      return; 
+    }
+
+    // WILD ENCOUNTER LOGIC
+    let cpInput = parseInt(ui.cp.value);
+    let baseLevel = parseInt(ui.slider.value);
+    let slackVal = ui.slack.value;
+    let isWeather = ui.weather.checked;
+
+    if (!cpInput) {
+       ui.results.innerHTML = "<div class='placeholder-text'>Enter CP to evaluate possibilities...</div>";
+       renderEmptyPVP(name, data);
+       return;
+    }
+
+    let minIV = isWeather ? 4 : 0;
+    
+    let minLvl = 1;
+    let maxLvl = 50;
+    
+    if (slackVal !== 'all') {
+      let sNum = parseInt(slackVal);
+      minLvl = Math.max(1, baseLevel - sNum);
+      maxLvl = Math.min(50, baseLevel + sNum);
+    }
+    
+    for (let l = minLvl; l <= maxLvl; l++) {
+      let cpm = getCPM(l);
+      for (let a = minIV; a <= 15; a++) {
+        for (let d = minIV; d <= 15; d++) {
+          for (let s = minIV; s <= 15; s++) {
+            if (calculateCP(data.atk, data.def, data.sta, a, d, s, cpm) === cpInput) {
+              currentMatches.push({
+                  a, d, s, level: l, 
+                  total: ((a + d + s) / 45 * 100).toFixed(1),
+                  id: `${l}-${a}-${d}-${s}`
+              });
+            }
+          }
+        }
+      }
+    }
+
+    currentMatches.sort((x, y) => {
+        if (y.total !== x.total) return y.total - x.total;
+        return Math.abs(x.level - baseLevel) - Math.abs(y.level - baseLevel);
+    });
+    
+    // --- HUNDO / NUNDO ALERTS ---
+    if (currentMatches.length > 0) {
+      let hasHundo = currentMatches.some(m => m.total === "100.0");
+      let hasNundo = currentMatches.some(m => m.total === "0.0");
+
+      if (hasHundo && hasNundo) {
+        ui.alertBox.innerHTML = `<div class="hn-alert hn-both">⚠️ Hundo & Nundo Possible at this CP!</div>`;
+      } else if (hasHundo) {
+        ui.alertBox.innerHTML = `<div class="hn-alert hn-hundo">🌟 HUNDO Possible at this CP! (100%)</div>`;
+      } else if (hasNundo) {
+        ui.alertBox.innerHTML = `<div class="hn-alert hn-nundo">💀 NUNDO Possible at this CP! (0%)</div>`;
+      }
+    }
+
+    selectedMatch = null;
+    renderIVList();
+    renderPVPTable(name, data);
+  }
+
+  [ui.cp, ui.weather, ui.cLevel, ui.cAtk, ui.cDef, ui.cSta].forEach(el => el.addEventListener('input', calculateMatches));
+  
   loadData();
 </script>
 </body>
