@@ -84,8 +84,23 @@
   .cp-input-wrap { flex: 1; }
   .weather-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9fafb; border: 1px solid var(--border-light); border-radius: 6px; padding: 0 12px; }
 
-  /* --- AUTOCOMPLETE --- */
-  .autocomplete-container { position: relative; width: 100%; }
+  /* --- AUTOCOMPLETE & SEARCH X --- */
+  .autocomplete-container { position: relative; width: 100%; display: flex; align-items: center;}
+  #pokemon { padding-right: 30px; } /* Leave room for X */
+  .clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-muted);
+    line-height: 1;
+    display: none;
+    user-select: none;
+  }
+  .clear-btn:hover { color: var(--text-main); }
+  
   .autocomplete-items {
     position: absolute; border: 1px solid var(--border-light); border-radius: 6px; z-index: 99; top: 100%; left: 0; right: 0;
     max-height: 200px; overflow-y: auto; background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 5px;
@@ -119,7 +134,7 @@
   input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: var(--thumb-color, #ffeb3b); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer; margin-top: -7px; }
   .slider-labels { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-muted); font-weight: 600; }
 
-  /* --- SCROLLABLE CP LIST (Replaces Dropdown) --- */
+  /* --- SCROLLABLE CP LIST --- */
   .scrollable-cp-list {
     max-height: 120px;
     overflow-y: auto;
@@ -169,7 +184,7 @@
   .evo-header { background: #f9fafb; font-size: 10px; text-transform: uppercase; color: var(--primary-blue); font-weight: 700; padding: 6px 0; border-top: 2px solid var(--border-light); }
   .perfect-iv { color: #d97706; font-weight: bold; }
   
-  /* Dynamic height for matches to prevent infinite scrolling */
+  /* Dynamic height for matches */
   .scrollable-matches { max-height: calc(100vh - 200px); overflow-y: auto; border: 1px solid var(--border-light); border-radius: 6px; background: #ffffff; }
   .match-row { cursor: pointer; transition: background 0.1s; }
   .match-row:hover { background-color: #f9fafb; }
@@ -208,7 +223,7 @@
 
 <div class="top-header">
   <div class="header-left">
-    <h1>Wild IV Evaluator <span class="version-badge">v1.7</span></h1>
+    <h1>Wild IV Evaluator <span class="version-badge">v1.9</span></h1>
   </div>
   <div class="header-right">
     <div class="trainer-lvl">
@@ -231,6 +246,7 @@
       <div class="card-header">Target Identification</div>
       <div class="autocomplete-container">
         <input type="text" id="pokemon" placeholder="e.g. Pawmi, Skeledirge..." autocomplete="off">
+        <span id="clear-search" class="clear-btn">&times;</span>
         <div id="autocomplete-list" class="autocomplete-items"></div>
       </div>
       <div id="related-pokemon"></div>
@@ -381,6 +397,7 @@
   
   const ui = {
     poke: document.getElementById('pokemon'),
+    clearBtn: document.getElementById('clear-search'),
     list: document.getElementById('autocomplete-list'),
     related: document.getElementById('related-pokemon'),
     cp: document.getElementById('cp'),
@@ -426,32 +443,36 @@
       const stats = await statsRes.json();
       const evolutionsRaw = await evoRes.json();
 
-      const junkForms = [
-        'purified', 'costume', 'hat', 'crown', 'flower', '2019', '2020', '2021', '2022', '2023', '2024', 
-        'clone', 'libre', 'star', 'holiday', 'event', 'anniversary', 'winter', 'summer', 'fall', 'spring', 
-        'bowtie', 'scarf', 'balloon', 'jacket', 'shirt', 'party', 'visor', 'mask', 'sunglasses', 'trick', 
-        'treat', 'spooky', 'fragment', 'explorer', 'cap', 'beanie', 'mischief', 'ribbon', 'band', 'bg', 
-        'background', 'go fest', 'safari', 'crash', 'lucha', 'rock star', 'pop star', 'phd', 'flying', 
-        'wwe', 'championship', 'world', 'jeans', 'sneakers', 'glasses', 'fc', 'go', 'tour'
-      ];
+      // STRICT WHITELIST APPROACH
+      const validFormsRegex = /alola|galar|hisui|paldea|origin|altered|therian|incarnate|attack|defense|speed|trash|sandy|plant|sunshine|overcast|east|west|heat|wash|frost|fan|mow|land|sky|standard|zen|black|white|ordinary|resolute|aria|pirouette|burn|chill|douse|shock|confined|unbound|baile|pom-pom|pa'u|sensu|midday|midnight|dusk|solo|school|10%|50%|complete|dawn|ultra|amped|low.?key|single|rapid|ice|shadow|hero|zero|chest|roaming|bloodmoon|small|average|large|super|ash|sunny|rainy|snowy|mega|primal|bug|dark|dragon|electric|fairy|fighting|fire|flying|ghost|grass|ground|poison|psychic|rock|steel|water/i;
 
       stats.forEach(p => {
         let name = p.pokemon_name;
         if (p.form && p.form !== 'Normal') {
-          let fLow = p.form.toLowerCase();
-          if (junkForms.some(w => fLow.includes(w))) return; 
+          if (!validFormsRegex.test(p.form)) return; 
           name = `${p.pokemon_name} (${p.form})`;
         }
         pokeData[name] = { id: p.pokemon_id, atk: p.base_attack, def: p.base_defense, sta: p.base_stamina };
       });
 
       evolutionsRaw.forEach(p => {
-        let baseName = p.form && p.form !== 'Normal' ? `${p.pokemon_name} (${p.form})` : p.pokemon_name;
+        let baseName = p.pokemon_name;
+        if (p.form && p.form !== 'Normal') {
+          if (!validFormsRegex.test(p.form)) return;
+          baseName = `${p.pokemon_name} (${p.form})`;
+        }
+        
         if (!evoData[baseName]) evoData[baseName] = [];
         
         p.evolutions.forEach(e => {
-          let evoName = e.form && e.form !== 'Normal' ? `${e.pokemon_name} (${e.form})` : e.pokemon_name;
-          evoData[baseName].push(evoName);
+          let evoName = e.pokemon_name;
+          if (e.form && e.form !== 'Normal') {
+            if (!validFormsRegex.test(e.form)) return;
+            evoName = `${e.pokemon_name} (${e.form})`;
+          }
+          if (!evoData[baseName].includes(evoName)) {
+            evoData[baseName].push(evoName);
+          }
         });
       });
 
@@ -475,16 +496,34 @@
     calculateMatches();
   };
 
+  // --- SEARCH CLEAR BUTTON ---
+  ui.clearBtn.addEventListener('click', function() {
+    ui.poke.value = '';
+    ui.list.innerHTML = '';
+    this.style.display = 'none';
+    ui.poke.focus();
+    
+    // Clear the active analysis UI
+    ui.related.innerHTML = '';
+    ui.pveResults.innerHTML = `<div class="compact-pve-bar" style="justify-content: center; color: var(--text-muted);">Select a Pokémon to view PvE base stats.</div>`;
+    ui.pvpBody.innerHTML = `<tr><td colspan="5" class="placeholder-text">Awaiting input...</td></tr>`;
+    ui.results.innerHTML = `<div class="placeholder-text">Enter CP to evaluate...</div>`;
+    document.getElementById('hundo-nundo-container').style.display = 'none';
+  });
+
   // --- AUTOCOMPLETE ---
   window.selectPokemon = function(name) {
     ui.poke.value = name;
     ui.list.innerHTML = '';
+    ui.clearBtn.style.display = 'block';
     calculateMatches();
   };
 
   ui.poke.addEventListener('input', function() {
     let val = this.value;
     ui.list.innerHTML = ''; 
+    ui.clearBtn.style.display = val.length > 0 ? 'block' : 'none';
+    
     if (!val) return;
     
     let matches = pokemonNames.filter(name => name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
@@ -500,7 +539,7 @@
   });
 
   document.addEventListener("click", function (e) {
-    if (e.target !== ui.poke) ui.list.innerHTML = '';
+    if (e.target !== ui.poke && e.target !== ui.clearBtn) ui.list.innerHTML = '';
   });
 
   function updateSliderVisuals() {
