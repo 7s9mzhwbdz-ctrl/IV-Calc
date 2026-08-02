@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <!-- App Primary Blue Background -->
+  <rect width="180" height="180" fill="#3c52b2"/>
+  
+  <!-- Subtle background glow -->
+  <circle cx="90" cy="80" r="54" fill="#ffffff" opacity="0.15"/>
+  
+  <!-- Pokéball Top Half (Red) -->
+  <path d="M 40 80 A 50 50 0 0 1 140 80 Z" fill="#ef4444"/>
+  
+  <!-- Pokéball Bottom Half (White) -->
+  <path d="M 40 80 A 50 50 0 0 0 140 80 Z" fill="#ffffff"/>
+  
+  <!-- Outer Border & Center Divider -->
+  <circle cx="90" cy="80" r="50" fill="none" stroke="#2c3e9c" stroke-width="6"/>
+  <line x1="40" y1="80" x2="140" y2="80" stroke="#2c3e9c" stroke-width="6"/>
+  
+  <!-- Center Button -->
+  <circle cx="90" cy="80" r="14" fill="#ffffff" stroke="#2c3e9c" stroke-width="6"/>
+  <circle cx="90" cy="80" r="4" fill="#2c3e9c"/>
+
+  <!-- Bold Text at the Bottom -->
+  <text x="90" y="155" font-family="-apple-system, Inter, sans-serif" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="1">IV EVAL</text>
+</svg>
