@@ -19,10 +19,9 @@ body{font-family:'Inter',sans-serif;margin:0;background:var(--bg-color);color:va
 .card-header{font-size:12px;font-weight:700;color:var(--primary-blue);text-transform:uppercase;margin-bottom:12px;letter-spacing:.5px}
 .card-header-flex{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .input-label{display:block;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px}
-.expand-btn{background:#f4f6fc;border:1px solid #c7d2fe;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--primary-blue);cursor:pointer;transition:.2s}
+.expand-btn{background:#f4f6fc;border:1px solid #c7d2fe;border-radius:4px;padding:4px 8px;font-size:14px;color:var(--primary-blue);cursor:pointer;transition:.2s;line-height:1}
 .expand-btn:hover{background:var(--primary-blue);color:#fff}
 .is-fullscreen{position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;z-index:9999!important;margin:0!important;border-radius:0!important;overflow-y:auto!important;background:#fff!important;padding:20px!important;box-sizing:border-box!important}
-.is-fullscreen .scrollable-cp-list,.is-fullscreen .scrollable-matches{max-height:calc(100vh - 100px)!important}
 .is-fullscreen .results-table th{top:-20px}
 .tabs{display:flex;background:#f3f4f6;border-radius:8px;padding:4px;margin-bottom:15px;border:1px solid var(--border-light)}
 .tab{flex:1;text-align:center;padding:6px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);border:0;background:0 0}
@@ -72,9 +71,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:22px;widt
 .evo-header{background:#f9fafb;font-size:10px;text-transform:uppercase;color:var(--primary-blue);font-weight:700;padding:6px 0;border-top:2px solid var(--border-light)}
 .perfect-iv{color:#d97706;font-weight:700}
 .scrollable-matches{max-height:calc(100vh - 200px);overflow-y:auto;border:1px solid var(--border-light);border-radius:6px;background:#fff}
-.match-row{cursor:pointer;transition:background .1s}
+.match-row{display:flex;padding:8px 10px;border-bottom:1px solid #f3f4f6;font-size:12px;cursor:pointer;transition:background .1s}
+.match-row:last-child{border-bottom:none}
 .match-row:hover{background-color:#f9fafb}
-.selected-row{background-color:#e0e7ff!important;box-shadow:inset 4px 0 0 #3730a3}
+.match-row span{flex:1;text-align:center}
+.match-row span:first-child{text-align:left;font-weight:700}
+.match-row span:last-child{text-align:right;font-weight:700}
+.selected-row{background-color:#e0e7ff!important;box-shadow:inset 4px 0 0 #3730a3;border-radius:0}
+
+/* Multi-column fullscreen layouts */
+.is-fullscreen .scrollable-cp-list, .is-fullscreen .scrollable-matches {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;max-height:calc(100vh - 100px)!important;border:none;background:0 0;overflow-y:auto
+}
+.is-fullscreen .cp-list-item, .is-fullscreen .match-row {
+  border:1px solid var(--border-light);border-radius:6px;background:#fff;border-bottom:1px solid var(--border-light)!important;margin-bottom:0
+}
+
 #hundo-nundo-alert:empty{display:none}
 .hn-alert{padding:10px;margin-bottom:12px;border-radius:6px;font-weight:700;text-align:center;font-size:13px;text-transform:uppercase;box-shadow:0 2px 4px rgba(0,0,0,.1);animation:popIn .3s ease-out}
 .hn-hundo{background:#fef08a;color:#854d0e;border:1px solid #fde047}
@@ -86,7 +98,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:22px;widt
 </head>
 <body>
 <div class="top-header">
-  <div class="header-left"><h1>Wild IV Evaluator <span class="version-badge">v2.0</span></h1></div>
+  <div class="header-left"><h1>Wild IV Evaluator <span class="version-badge">v2.1</span></h1></div>
   <div class="header-right"><div class="trainer-lvl">Tr. Lvl <input type="number" id="trainerLevel" value="50" max="80" min="1"></div></div>
 </div>
 
@@ -126,7 +138,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:22px;widt
       </div>
       <div id="hundo-nundo-container" style="display:none;margin-top:15px;padding-top:12px;border-top:1px dashed var(--border-light)">
         <div class="card-header card-header-flex" style="margin-bottom:8px;font-size:10px;color:var(--text-muted)">
-          <span>Hundo / Nundo CP Reference</span><button class="expand-btn" onclick="toggleFullscreen('hundo-nundo-container', this)">⛶ Expand</button>
+          <span>Hundo / Nundo CP Reference</span><button class="expand-btn" onclick="toggleFullscreen('hundo-nundo-container', this)">⛶</button>
         </div>
         <div id="quick-cp-list" class="scrollable-cp-list"></div>
       </div>
@@ -144,7 +156,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:22px;widt
 
   <div class="col-middle">
     <div class="card" id="pvp-card">
-      <div class="card-header card-header-flex"><span>Analysis & Rankings</span><button class="expand-btn" onclick="toggleFullscreen('pvp-card', this)">⛶ Expand</button></div>
+      <div class="card-header card-header-flex"><span>Analysis & Rankings</span><button class="expand-btn" onclick="toggleFullscreen('pvp-card', this)">⛶</button></div>
       <div id="pve-results"><div class="compact-pve-bar" style="justify-content:center;color:var(--text-muted)">Select a Pokémon to view PvE base stats.</div></div>
       <table class="results-table">
         <thead><tr><th>League</th><th>Max %</th><th>IVs</th><th>Lvl</th><th class="hide-mobile">Prod</th></tr></thead>
@@ -155,7 +167,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:22px;widt
 
   <div class="col-right">
     <div class="card" id="card-possibilities" style="display:flex;flex-direction:column;height:100%;box-sizing:border-box">
-      <div class="card-header card-header-flex"><span>IV Probabilities</span><button class="expand-btn" onclick="toggleFullscreen('card-possibilities', this)">⛶ Expand</button></div>
+      <div class="card-header card-header-flex"><span>IV Probabilities</span><button class="expand-btn" onclick="toggleFullscreen('card-possibilities', this)">⛶</button></div>
       <div id="hundo-nundo-alert"></div>
       <div id="results" style="flex:1"><div class="placeholder-text">Enter CP to evaluate...</div></div>
     </div>
@@ -169,7 +181,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:22px;widt
   window.toggleFullscreen = (id, btn) => {
     const isFull = document.getElementById(id).classList.toggle('is-fullscreen');
     document.body.style.overflow = isFull ? 'hidden' : 'auto';
-    btn.innerHTML = isFull ? '✖ Close' : '⛶ Expand';
+    btn.innerHTML = isFull ? '✖' : '⛶';
   };
 
   let pokeData={}, pokeNames=[], evoData={}, cachedRanks={}, isCaughtMode=!1, curMatches=[], selMatch=null;
@@ -324,9 +336,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:22px;widt
   const renderList = () => {
     if(isCaughtMode) return;
     if(!curMatches.length) return ui.results.innerHTML=`<div class='placeholder-text'><strong>No combinations match CP ${ui.cp.value} at the selected levels.</strong><br>Try adjusting the slider slack or color.</div>`;
-    let st=ui.slack.value==='all'?'(All Levels)':`(±${ui.slack.value})`, ho=`<div style="margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text-muted);display:flex;justify-content:space-between"><span>${curMatches.length} MATCHES ${st}</span><span style="font-style:italic;font-weight:400">Tap to isolate</span></div><div class="scrollable-matches"><table class="results-table" style="margin:0"><thead><tr><th>Lvl</th><th>IVs</th><th>%</th></tr></thead><tbody>`;
-    curMatches.forEach(m => { ho+=`<tr class="match-row ${selMatch?.id===m.id?'selected-row':''} ${m.total==="100.0"?'perfect-iv':''}" data-id="${m.id}" onclick="selectMatch('${m.id}')"><td><strong>${m.level}</strong></td><td>${m.a}/${m.d}/${m.s}</td><td><strong>${m.total}%</strong></td></tr>`; });
-    ui.results.innerHTML = ho+`</tbody></table></div>`;
+    let st=ui.slack.value==='all'?'(All Levels)':`(±${ui.slack.value})`, ho=`<div style="margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text-muted);display:flex;justify-content:space-between"><span>${curMatches.length} MATCHES ${st}</span><span style="font-style:italic;font-weight:400">Tap to isolate</span></div><div class="scrollable-matches">`;
+    curMatches.forEach(m => { ho+=`<div class="match-row ${selMatch?.id===m.id?'selected-row':''} ${m.total==="100.0"?'perfect-iv':''}" data-id="${m.id}" onclick="selectMatch('${m.id}')"><span>Lvl ${m.level}</span><span>${m.a}/${m.d}/${m.s}</span><span>${m.total}%</span></div>`; });
+    ui.results.innerHTML = ho+`</div>`;
   };
 
   const renderTab = (n, d) => {
