@@ -79,10 +79,6 @@
   }
   input[type="text"]:focus, input[type="number"].box-input:focus, select.box-input:focus { border-color: var(--primary-blue); background: #fff; }
   
-  #quick-cp-select {
-    background-color: #f4f6fc; color: var(--primary-blue); font-weight: 600; border-color: #c7d2fe;
-  }
-
   /* Extremely Compact Mobile Inputs */
   .input-group-row { display: flex; gap: 10px; margin-bottom: 12px; }
   .cp-input-wrap { flex: 1; }
@@ -122,6 +118,43 @@
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: linear-gradient(to right, hsl(120, 100%, 50%), hsl(60, 100%, 50%), hsl(0, 100%, 50%)); border-radius: 4px; }
   input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: var(--thumb-color, #ffeb3b); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer; margin-top: -7px; }
   .slider-labels { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-muted); font-weight: 600; }
+
+  /* --- SCROLLABLE CP LIST (Replaces Dropdown) --- */
+  .scrollable-cp-list {
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: #ffffff;
+    margin-top: 8px;
+  }
+  .cp-list-item {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 11px;
+    color: var(--text-main);
+  }
+  .cp-list-item:last-child {
+    border-bottom: none;
+  }
+  .cp-list-item.highlight {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-bottom: 2px solid #c7d2fe;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .slider-pill {
+    background: #3730a3;
+    color: white;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
 
   /* --- TABLES & RESULTS --- */
   .placeholder-text { color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px; }
@@ -175,7 +208,7 @@
 
 <div class="top-header">
   <div class="header-left">
-    <h1>Wild IV Evaluator <span class="version-badge">v1.6</span></h1>
+    <h1>Wild IV Evaluator <span class="version-badge">v1.7</span></h1>
   </div>
   <div class="header-right">
     <div class="trainer-lvl">
@@ -244,10 +277,10 @@
         </div>
       </div>
 
-      <!-- Hundo/Nundo Quick Reference -->
+      <!-- Hundo/Nundo Quick Reference Scroll List -->
       <div id="hundo-nundo-container" style="display: none; margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-light);">
         <label class="input-label">Hundo / Nundo CP Reference</label>
-        <select id="quick-cp-select" class="box-input" style="font-size: 11px; padding: 6px;"></select>
+        <div id="quick-cp-list" class="scrollable-cp-list"></div>
       </div>
     </div>
 
@@ -619,7 +652,7 @@
 
   function renderReferenceCPs(data) {
     let container = document.getElementById('hundo-nundo-container');
-    let dropdown = document.getElementById('quick-cp-select');
+    let list = document.getElementById('quick-cp-list');
     
     if (!data || isCaughtMode) {
       container.style.display = 'none';
@@ -627,17 +660,17 @@
     }
     
     container.style.display = 'block';
-    dropdown.innerHTML = '';
+    list.innerHTML = '';
     
     let sliderLevel = parseInt(ui.slider.value);
-    if (sliderLevel > 35) sliderLevel = 35; // Wild max is 35
+    if (sliderLevel > 35) sliderLevel = 35; 
     
     let options = [];
     for (let l = 1; l <= 35; l++) {
       let cpm = getCPM(l);
       let hundoCP = calculateCP(data.atk, data.def, data.sta, 15, 15, 15, cpm);
       
-      let text = `Lvl ${l} | 100%: ${hundoCP}`;
+      let text = `<strong>Lvl ${l}</strong> | 100%: ${hundoCP}`;
       
       if (l >= 1 && l <= 3) {
         let nundoCP = calculateCP(data.atk, data.def, data.sta, 0, 0, 0, cpm);
@@ -654,19 +687,20 @@
       options.push({ level: l, text: text });
     }
     
-    // Float the slider's currently selected level to the top of the dropdown
+    // Float the slider's currently selected level to the top
     let topOptionIndex = options.findIndex(o => o.level === sliderLevel);
     if (topOptionIndex > -1) {
       let topOpt = { ...options[topOptionIndex] };
-      topOpt.text = topOpt.text + ' (Slider Level)';
+      topOpt.text = topOpt.text + '<span class="slider-pill">Slider Level</span>';
+      topOpt.isHighlight = true;
       options.unshift(topOpt);
     }
     
-    options.forEach((o, i) => {
-      let opt = document.createElement('option');
-      opt.value = o.level;
-      opt.text = o.text;
-      dropdown.appendChild(opt);
+    options.forEach((o) => {
+      let div = document.createElement('div');
+      div.className = 'cp-list-item' + (o.isHighlight ? ' highlight' : '');
+      div.innerHTML = o.text;
+      list.appendChild(div);
     });
   }
 
